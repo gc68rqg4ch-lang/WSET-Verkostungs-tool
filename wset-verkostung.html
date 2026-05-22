@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSET Level 2 — Systematisches Verkosten von Wein</title>
+<style>
+  :root {
+    --bg: #f5f2ec;
+    --paper: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #d8d3c8;
+    --accent: #722f37;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  header { margin-bottom: 18px; }
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  .wine-type-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin: 16px 0;
+    background: var(--paper);
+    padding: 6px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .wine-type-btn {
+    background: transparent;
+    border: none;
+    padding: 12px 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all 0.15s;
+    min-height: 44px;
+  }
+  .wine-type-btn:hover { color: var(--ink); }
+  .wine-type-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .wine-type-btn[data-type="weiss"].active { background: #b8932a; }
+  .wine-type-btn[data-type="rose"].active { background: #c97b8b; }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin: 6px 0 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    background: none;
+    border: none;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+    font-weight: 600;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .meta {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+  }
+  .meta label {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .meta input {
+    margin-top: 4px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .meta input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  .section {
+    background: var(--paper);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .section-title {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .section-subtitle {
+    background: #2a2a2a;
+    color: #d0c8b8;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-style: italic;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    gap: 12px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .row-sublabel {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    display: block;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pill {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    min-height: 36px;
+  }
+  .pill:hover { border-color: var(--accent); }
+  .pill.selected {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  body[data-wine-type="weiss"] .pill.selected { background: #b8932a; border-color: #b8932a; }
+  body[data-wine-type="rose"] .pill.selected { background: #c97b8b; border-color: #c97b8b; }
+
+  textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 15px;
+    resize: vertical;
+    min-height: 80px;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  body[data-wine-type="weiss"] .btn { background: #b8932a; }
+  body[data-wine-type="rose"] .btn { background: #c97b8b; }
+  .btn:hover { opacity: 0.9; }
+  .btn.secondary {
+    background: var(--paper) !important;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+
+  .saved-list { display: flex; flex-direction: column; gap: 8px; }
+  .saved-item {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .saved-info { flex: 1; min-width: 0; }
+  .saved-name { font-weight: 600; font-size: 15px; }
+  .saved-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .saved-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .icon-btn {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    min-height: 36px;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+  .icon-btn.danger { color: #a14444; }
+
+  .backup-bar {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .backup-bar .info {
+    flex: 1;
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 200px;
+  }
+
+  .lex-section {
+    background: var(--paper);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .lex-section-title {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .lex-section-sub {
+    background: #2a2a2a;
+    color: #d0c8b8;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-style: italic;
+  }
+  .lex-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    gap: 12px;
+    font-size: 14px;
+  }
+  .lex-row:last-child { border-bottom: none; }
+  .lex-cat { font-weight: 600; }
+  .lex-desc { color: var(--muted); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .storage-warning {
+    background: #fff4e0;
+    border: 1px solid #e8c878;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #6b4a00;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .storage-warning.show { display: block; }
+
+  @media (max-width: 600px) {
+    .meta { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 110px 1fr; }
+    .lex-row { grid-template-columns: 130px 1fr; }
+    h1 { font-size: 20px; }
+    .pill { padding: 8px 12px; font-size: 13px; }
+    .wine-type-btn { font-size: 14px; padding: 10px 4px; }
+  }
+</style>
+</head>
+<body data-wine-type="rot">
+
+<div class="wrap">
+  <header>
+    <h1>WSET Level 2 — Systematisches Verkosten von Wein</h1>
+    <div class="subtitle" id="wine-type-label">Rotwein</div>
+  </header>
+
+  <div id="storage-warning" class="storage-warning"></div>
+
+  <div class="wine-type-bar">
+    <button class="wine-type-btn active" data-type="rot">Rotwein</button>
+    <button class="wine-type-btn" data-type="weiss">Weisswein</button>
+    <button class="wine-type-btn" data-type="rose">Rosé</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="form">Verkostung</button>
+    <button class="tab" data-tab="saved">Gespeichert</button>
+    <button class="tab" data-tab="lexikon">Wein-Lexikon</button>
+  </div>
+
+  <div class="panel active" id="panel-form">
+
+    <div class="meta">
+      <label>Wein-Name
+        <input type="text" id="meta-name" placeholder="z.B. Barolo 2018">
+      </label>
+      <label>Produzent
+        <input type="text" id="meta-producer" placeholder="z.B. Vietti">
+      </label>
+      <label>Region / Land
+        <input type="text" id="meta-region" placeholder="z.B. Piemont, Italien">
+      </label>
+      <label>Jahrgang
+        <input type="text" id="meta-vintage" placeholder="z.B. 2018">
+      </label>
+      <label>Rebsorte(n)
+        <input type="text" id="meta-grape" placeholder="z.B. Nebbiolo">
+      </label>
+      <label>Datum
+        <input type="date" id="meta-date">
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Optischer Eindruck</div>
+      <div class="row">
+        <div class="row-label">Klarheit</div>
+        <div class="pills" data-field="klarheit" data-options="klar|trüb (fehlerhaft?)"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Farbtiefe</div>
+        <div class="pills" data-field="farbtiefe" data-options="blass|mittel|tief"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Farbton</div>
+        <div class="pills" data-field="farbton" id="farbton-pills"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Geruch</div>
+      <div class="row">
+        <div class="row-label">Reintönigkeit</div>
+        <div class="pills" data-field="reintoenigkeit" data-options="sauber|unsauber (fehlerhaft?)"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Intensität</div>
+        <div class="pills" data-field="geruch-intensitaet" data-options="verhalten|mittel|ausgeprägt"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">
+          Aromaausprägung
+          <span class="row-sublabel">z. B. primär, sekundär, tertiär</span>
+        </div>
+        <div class="pills" data-field="aromaauspraegung" data-multi="true" data-options="primär|sekundär|tertiär"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Geschmack</div>
+      <div class="row">
+        <div class="row-label">Süsse</div>
+        <div class="pills" data-field="suesse" data-options="trocken|fast trocken|mittel|süss"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Säure</div>
+        <div class="pills" data-field="saeure" data-options="niedrig|mittel|hoch"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Tannin</div>
+        <div class="pills" data-field="tannin" data-options="niedrig|mittel|hoch"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Alkohol</div>
+        <div class="pills" data-field="alkohol" data-options="niedrig|mittel|hoch"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Körper</div>
+        <div class="pills" data-field="koerper" data-options="schlank|mittel|voll"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Geschmacks-<br>intensität</div>
+        <div class="pills" data-field="geschmack-intensitaet" data-options="verhalten|mittel|ausgeprägt"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">
+          Geschmacks-<br>ausprägung
+          <span class="row-sublabel">z. B. primär, sekundär, tertiär</span>
+        </div>
+        <div class="pills" data-field="geschmacksauspraegung" data-multi="true" data-options="primär|sekundär|tertiär"></div>
+      </div>
+      <div class="row">
+        <div class="row-label">Abgang</div>
+        <div class="pills" data-field="abgang" data-options="kurz|mittel|lang"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Gesamteindruck</div>
+      <div class="row">
+        <div class="row-label">Qualität</div>
+        <div class="pills" data-field="qualitaet" data-options="fehlerhaft|schwach|durchschnittlich|gut|sehr gut|hervorragend"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Aromen und Geschmacksnoten</div>
+      <div class="section-subtitle">Detailauswahl aus dem Wein-Lexikon</div>
+      <div id="aromas-container"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Notizen</div>
+      <div style="padding: 12px 16px;">
+        <textarea id="notes" placeholder="Eigene Beobachtungen, Essensbegleitung, Trinkreife, Vergleiche…"></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btn-save">Verkostung speichern</button>
+      <button class="btn secondary" id="btn-export">Als Text kopieren</button>
+      <button class="btn secondary" id="btn-clear">Formular leeren</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-saved">
+    <div class="backup-bar">
+      <div class="info">
+        Daten werden lokal im Browser gespeichert. Backup empfohlen.
+      </div>
+      <button class="icon-btn" id="btn-backup-export">Backup herunterladen</button>
+      <button class="icon-btn" id="btn-backup-import">Backup einspielen</button>
+      <input type="file" id="backup-file-input" accept=".json" style="display:none">
+    </div>
+    <div id="saved-list" class="saved-list"></div>
+  </div>
+
+  <div class="panel" id="panel-lexikon">
+    <div id="lexikon-content"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WINE_TYPES = {
+  rot: {
+    label: 'Rotwein',
+    farbton: ['purpurrot', 'rubinrot', 'granatrot', 'braunrot', 'braun'],
+    tertiaer: [
+      { cat: "Rotwein", desc: "Trockenfrüchte, Leder, Erde, Pilze, Fleisch, Tabak, nasses Laub, Waldboden, Karamell" },
+      { cat: "Absichtlich oxidierte Weine", desc: "Mandel, Haselnuss, Walnuss, Schokolade, Kaffee, Karamell" }
+    ]
+  },
+  weiss: {
+    label: 'Weisswein',
+    farbton: ['grüngelb', 'zitronengelb', 'goldgelb', 'bernsteingelb', 'braun'],
+    tertiaer: [
+      { cat: "Weisswein", desc: "Trockenfrüchte, Orangenmarmelade, Benzin/Petrolnote, Zimt, Ingwer, Muskatnuss, Mandel, Haselnuss, Honig, Karamell" },
+      { cat: "Absichtlich oxidierte Weine", desc: "Mandel, Haselnuss, Walnuss, Schokolade, Kaffee, Karamell" }
+    ]
+  },
+  rose: {
+    label: 'Rosé',
+    farbton: ['hellrosa', 'rosa-orange', 'orange'],
+    tertiaer: [
+      { cat: "Weisswein", desc: "Trockenfrüchte, Orangenmarmelade, Benzin/Petrolnote, Zimt, Ingwer, Muskatnuss, Mandel, Haselnuss, Honig, Karamell" },
+      { cat: "Absichtlich oxidierte Weine", desc: "Mandel, Haselnuss, Walnuss, Schokolade, Kaffee, Karamell" }
+    ]
+  }
+};
+
+// Primäre Aromen je nach Wein-Typ
+const AROMA_PRIMAER_BY_TYPE = {
+  rot: {
+    title: "Primäre Aromen und Geschmacksnoten",
+    subtitle: "Die Aromen und Geschmacksnoten aus der Traube und aus der alkoholischen Gärung",
+    items: [
+      { cat: "Floral", desc: "Blüten, Rose, Veilchen" },
+      { cat: "Grüne Früchte", desc: "Apfel, Birne, Stachelbeere, Traube" },
+      { cat: "Zitrusfrüchte", desc: "Grapefruit, Zitrone, Limette, Orange" },
+      { cat: "Steinobst", desc: "Pfirsich, Aprikose, Nektarine" },
+      { cat: "Tropische Früchte", desc: "Banane, Litschi, Mango, Melone, Passionsfrucht, Ananas" },
+      { cat: "Rote Früchte", desc: "rote Johannisbeere, Cranberry, Himbeere, Erdbeere, rote Kirsche, rote Pflaume" },
+      { cat: "Schwarze Früchte", desc: "schwarze Johannisbeere, Brombeere, Heidelbeere, schwarze Kirsche, schwarze Pflaume" },
+      { cat: "Krautig", desc: "grüne Paprikaschote, Gras, Tomatenblätter, Spargel" },
+      { cat: "Kräuterwürzig", desc: "Eukalyptus, Minze, Fenchel, Dill, getrocknete Kräuter" },
+      { cat: "Gewürze", desc: "schwarzer/weisser Pfeffer, Lakritze" },
+      { cat: "Fruchtreife", desc: "unreife Früchte, reife Früchte, getrocknete Früchte, gekochte Früchte" },
+      { cat: "Andere", desc: "nasse Steine, Bonbons" }
+    ]
+  },
+  weiss: {
+    title: "Primäre Aromen und Geschmacksnoten",
+    subtitle: "Die Aromen und Geschmacksnoten aus der Traube und aus der alkoholischen Gärung",
+    items: [
+      { cat: "Florale Noten", desc: "Blüte, Rose, Veilchen, Akazie, Geissblatt, Kamille, Holunderblüte, Geranie, Jasmin" },
+      { cat: "Grüne Früchte", desc: "Apfel, Birne, Stachelbeere, Traube, Birnenbonbon, Quitte" },
+      { cat: "Zitrusfrüchte", desc: "Grapefruit, Zitrone, Limette, Orange, Orangenschale, Zitronenschale" },
+      { cat: "Steinobst", desc: "Pfirsich, Aprikose, Nektarine" },
+      { cat: "Tropische Früchte", desc: "Banane, Litschi, Mango, Melone, Passionsfrucht, Ananas" },
+      { cat: "Pflanzlich / Vegetal", desc: "Grüne Paprika, Gras, Tomatenblatt, Spargel" },
+      { cat: "Kräuter", desc: "Eukalyptus, Minze, Fenchel, Dill, Getrocknete Kräuter" },
+      { cat: "Gewürze", desc: "Schwarzer Pfeffer, Weißer Pfeffer, Lakritz, Zimt" },
+      { cat: "Fruchtreife", desc: "Unreife Frucht, Reife Frucht, Getrocknete Frucht, Gekochte Frucht" },
+      { cat: "Sonstige", desc: "Nasse Steine, Bonbon" }
+    ]
+  },
+  rose: {
+    title: "Primäre Aromen und Geschmacksnoten",
+    subtitle: "Die Aromen und Geschmacksnoten aus der Traube und aus der alkoholischen Gärung",
+    items: [
+      { cat: "Rote Früchte", desc: "Rote Johannisbeere, Cranberry, Himbeere, Erdbeere, Rote Kirsche, Rote Pflaume" },
+      { cat: "Zitrusfrüchte", desc: "Grapefruit, Zitrone, Limette, Orange" },
+      { cat: "Florale Noten", desc: "Blüte, Rose, Veilchen" },
+      { cat: "Pflanzlich / Vegetal", desc: "Grüne Paprika, Gras, Tomatenblatt, Spargel" },
+      { cat: "Kräuter", desc: "Eukalyptus, Minze, Fenchel, Dill, Getrocknete Kräuter" },
+      { cat: "Fruchtreife", desc: "Unreife Frucht, Reife Frucht, Getrocknete Frucht, Gekochte Frucht" },
+      { cat: "Sonstige", desc: "Nasse Steine, Bonbon" }
+    ]
+  }
+};
+
+const AROMA_SEKUNDAER = {
+  title: "Sekundäre Aromen und Geschmacksnoten",
+  subtitle: "Die Aromen und Geschmacksnoten aus der Weinbereitung nach der Gärung",
+  items: [
+    { cat: "Hefe (Hefesatz, Autolyse, Flor)", desc: "Bisquit, Gebäck, Brot, Toastbrot, Brotteig, Käse, Joghurt" },
+    { cat: "Biologischer Säureabbau", desc: "Butter, Käse, Sahne" },
+    { cat: "Eiche", desc: "Vanille, Gewürznelke, Kokosnuss, Zeder, Holzkohle, Rauch, Schokolade, Kaffee" }
+  ]
+};
+
+function getAromaDataForType(type) {
+  return {
+    primaer: AROMA_PRIMAER_BY_TYPE[type],
+    sekundaer: AROMA_SEKUNDAER,
+    tertiaer: {
+      title: "Tertiäre Aromen und Geschmacksnoten",
+      subtitle: "Die Aromen und Geschmacksnoten aus der Reifung",
+      items: WINE_TYPES[type].tertiaer
+    }
+  };
+}
+
+let allStates = { rot: freshState(), weiss: freshState(), rose: freshState() };
+let currentType = 'rot';
+
+function freshState() {
+  return {
+    meta: { name: "", producer: "", region: "", vintage: "", grape: "", date: "" },
+    fields: {}, aromas: {}, notes: ""
+  };
+}
+
+function state() { return allStates[currentType]; }
+
+const STORAGE_PREFIX = 'wset_tastings_';
+const DRAFT_PREFIX = 'wset_draft_';
+let storageAvailable = true;
+
+function checkStorage() {
+  try {
+    const k = '__wset_test__';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return true;
+  } catch (e) { return false; }
+}
+
+function storageKey(type) { return STORAGE_PREFIX + (type || currentType); }
+
+function getAllTastings(type) {
+  if (!storageAvailable) return [];
+  try {
+    const raw = localStorage.getItem(storageKey(type));
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) { return []; }
+}
+
+function setAllTastings(list, type) {
+  if (!storageAvailable) { showToast('Speicher nicht verfügbar'); return false; }
+  try {
+    localStorage.setItem(storageKey(type), JSON.stringify(list));
+    return true;
+  } catch (e) {
+    showToast('Speichern fehlgeschlagen — Speicher voll?');
+    return false;
+  }
+}
+
+function saveDraft() {
+  if (!storageAvailable) return;
+  try { localStorage.setItem(DRAFT_PREFIX + currentType, JSON.stringify(state())); } catch (e) {}
+}
+
+function loadDraft(type) {
+  if (!storageAvailable) return null;
+  try {
+    const raw = localStorage.getItem(DRAFT_PREFIX + type);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function clearDraft(type) {
+  if (!storageAvailable) return;
+  try { localStorage.removeItem(DRAFT_PREFIX + (type || currentType)); } catch (e) {}
+}
+
+function renderStaticPills() {
+  document.querySelectorAll('.pills[data-options]').forEach(container => {
+    const field = container.dataset.field;
+    const multi = container.dataset.multi === "true";
+    const options = container.dataset.options.split('|');
+    container.innerHTML = '';
+    options.forEach(opt => container.appendChild(makePill(opt, field, multi, container)));
+  });
+}
+
+function renderFarbtonPills() {
+  const container = document.getElementById('farbton-pills');
+  container.innerHTML = '';
+  WINE_TYPES[currentType].farbton.forEach(opt => {
+    container.appendChild(makePill(opt, 'farbton', false, container));
+  });
+}
+
+function makePill(opt, field, multi, container) {
+  const btn = document.createElement('button');
+  btn.className = 'pill';
+  btn.textContent = opt;
+  btn.dataset.value = opt;
+  btn.addEventListener('click', () => {
+    const s = state();
+    if (multi) {
+      let current = s.fields[field] || [];
+      if (!Array.isArray(current)) current = [current];
+      if (current.includes(opt)) {
+        current = current.filter(v => v !== opt);
+        btn.classList.remove('selected');
+      } else {
+        current.push(opt);
+        btn.classList.add('selected');
+      }
+      s.fields[field] = current;
+    } else {
+      container.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+      if (s.fields[field] === opt) {
+        s.fields[field] = null;
+      } else {
+        s.fields[field] = opt;
+        btn.classList.add('selected');
+      }
+    }
+    saveDraft();
+  });
+  return btn;
+}
+
+function renderAromaSelector() {
+  const container = document.getElementById('aromas-container');
+  container.innerHTML = '';
+  const data = getAromaDataForType(currentType);
+  ['primaer', 'sekundaer', 'tertiaer'].forEach(level => {
+    const group = data[level];
+    const titleRow = document.createElement('div');
+    titleRow.style.cssText = 'background:#3a3a3a;color:#fff;padding:8px 16px;font-weight:600;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;';
+    titleRow.textContent = group.title;
+    container.appendChild(titleRow);
+    const subRow = document.createElement('div');
+    subRow.style.cssText = 'background:#4a4a4a;color:#d0c8b8;padding:5px 16px;font-size:11px;font-style:italic;';
+    subRow.textContent = group.subtitle;
+    container.appendChild(subRow);
+    group.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.style.alignItems = 'flex-start';
+      const cat = document.createElement('div');
+      cat.className = 'row-label';
+      cat.textContent = item.cat;
+      const pillsBox = document.createElement('div');
+      pillsBox.className = 'pills';
+      item.desc.split(/,\s*/).forEach(aroma => {
+        const btn = document.createElement('button');
+        btn.className = 'pill';
+        btn.textContent = aroma;
+        btn.addEventListener('click', () => {
+          const s = state();
+          const key = item.cat;
+          if (!s.aromas[key]) s.aromas[key] = [];
+          const list = s.aromas[key];
+          if (list.includes(aroma)) {
+            s.aromas[key] = list.filter(a => a !== aroma);
+            btn.classList.remove('selected');
+            if (s.aromas[key].length === 0) delete s.aromas[key];
+          } else {
+            list.push(aroma);
+            btn.classList.add('selected');
+          }
+          saveDraft();
+        });
+        pillsBox.appendChild(btn);
+      });
+      row.appendChild(cat);
+      row.appendChild(pillsBox);
+      container.appendChild(row);
+    });
+  });
+}
+
+function renderLexikon() {
+  const container = document.getElementById('lexikon-content');
+  container.innerHTML = '';
+  const data = getAromaDataForType(currentType);
+  const heading = document.createElement('h2');
+  heading.style.cssText = 'font-size:20px;font-weight:600;margin:0 0 4px;';
+  heading.textContent = 'WSET Level 2 Wein-Lexikon — ' + WINE_TYPES[currentType].label;
+  container.appendChild(heading);
+  const subhead = document.createElement('div');
+  subhead.style.cssText = 'color:var(--muted);font-size:14px;font-style:italic;margin-bottom:16px;';
+  subhead.textContent = 'Beschreibung von Aromen und Geschmacksnoten';
+  container.appendChild(subhead);
+  ['primaer', 'sekundaer', 'tertiaer'].forEach(level => {
+    const group = data[level];
+    const section = document.createElement('div');
+    section.className = 'lex-section';
+    section.innerHTML = `<div class="lex-section-title">${group.title}</div><div class="lex-section-sub">${group.subtitle}</div>`;
+    group.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'lex-row';
+      row.innerHTML = `<div class="lex-cat">${item.cat}</div><div class="lex-desc">${item.desc}</div>`;
+      section.appendChild(row);
+    });
+    container.appendChild(section);
+  });
+}
+
+function syncFormFromState() {
+  const s = state();
+  document.getElementById('meta-name').value = s.meta.name || '';
+  document.getElementById('meta-producer').value = s.meta.producer || '';
+  document.getElementById('meta-region').value = s.meta.region || '';
+  document.getElementById('meta-vintage').value = s.meta.vintage || '';
+  document.getElementById('meta-grape').value = s.meta.grape || '';
+  document.getElementById('meta-date').value = s.meta.date || '';
+  document.getElementById('notes').value = s.notes || '';
+  document.querySelectorAll('.pills[data-field]').forEach(container => {
+    const field = container.dataset.field;
+    const multi = container.dataset.multi === "true";
+    const val = s.fields[field];
+    container.querySelectorAll('.pill').forEach(p => {
+      if (multi && Array.isArray(val)) p.classList.toggle('selected', val.includes(p.dataset.value));
+      else p.classList.toggle('selected', p.dataset.value === val);
+    });
+  });
+  document.querySelectorAll('#aromas-container .row').forEach(row => {
+    const cat = row.querySelector('.row-label').textContent;
+    const selected = s.aromas[cat] || [];
+    row.querySelectorAll('.pill').forEach(pill => {
+      pill.classList.toggle('selected', selected.includes(pill.textContent));
+    });
+  });
+}
+
+function readMetaIntoState() {
+  const s = state();
+  s.meta.name = document.getElementById('meta-name').value;
+  s.meta.producer = document.getElementById('meta-producer').value;
+  s.meta.region = document.getElementById('meta-region').value;
+  s.meta.vintage = document.getElementById('meta-vintage').value;
+  s.meta.grape = document.getElementById('meta-grape').value;
+  s.meta.date = document.getElementById('meta-date').value;
+  s.notes = document.getElementById('notes').value;
+}
+
+['meta-name','meta-producer','meta-region','meta-vintage','meta-grape','meta-date','notes'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    readMetaIntoState();
+    saveDraft();
+  });
+});
+
+function switchWineType(type) {
+  readMetaIntoState();
+  saveDraft();
+  currentType = type;
+  document.body.dataset.wineType = type;
+  document.getElementById('wine-type-label').textContent = WINE_TYPES[type].label;
+  document.querySelectorAll('.wine-type-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  const draft = loadDraft(type);
+  if (draft) allStates[type] = draft;
+  renderFarbtonPills();
+  renderAromaSelector();
+  renderLexikon();
+  syncFormFromState();
+  if (document.getElementById('panel-saved').classList.contains('active')) renderSavedList();
+}
+
+function saveTasting() {
+  readMetaIntoState();
+  const s = state();
+  if (!s.meta.name) { showToast('Bitte einen Wein-Namen eingeben'); return; }
+  const list = getAllTastings();
+  const id = 'tasting_' + Date.now();
+  const entry = {
+    id, wineType: currentType,
+    savedAt: new Date().toISOString(),
+    data: JSON.parse(JSON.stringify(s))
+  };
+  list.unshift(entry);
+  if (setAllTastings(list)) {
+    clearDraft();
+    allStates[currentType] = freshState();
+    allStates[currentType].meta.date = new Date().toISOString().split('T')[0];
+    syncFormFromState();
+    showToast('Gespeichert: ' + s.meta.name);
+  }
+}
+
+function loadTasting(id) {
+  const list = getAllTastings();
+  const entry = list.find(e => e.id === id);
+  if (!entry) return;
+  allStates[currentType] = entry.data;
+  if (!state().aromas) state().aromas = {};
+  if (!state().fields) state().fields = {};
+  if (!state().meta) state().meta = {};
+  saveDraft();
+  syncFormFromState();
+  switchTab('form');
+  showToast('Geladen: ' + (state().meta.name || 'Verkostung'));
+}
+
+function deleteTasting(id) {
+  if (!confirm('Diese Verkostung wirklich löschen?')) return;
+  const list = getAllTastings();
+  const filtered = list.filter(e => e.id !== id);
+  if (setAllTastings(filtered)) {
+    renderSavedList();
+    showToast('Gelöscht');
+  }
+}
+
+function renderSavedList() {
+  const container = document.getElementById('saved-list');
+  const list = getAllTastings();
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty">Noch keine gespeicherten ' + WINE_TYPES[currentType].label + '-Verkostungen.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  list.forEach(entry => {
+    const meta = entry.data.meta || {};
+    const date = new Date(entry.savedAt);
+    const dateStr = date.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+    const quality = entry.data.fields?.qualitaet || '';
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+    item.innerHTML = `
+      <div class="saved-info">
+        <div class="saved-name">${escapeHtml(meta.name || 'Ohne Namen')}</div>
+        <div class="saved-meta">
+          ${escapeHtml([meta.producer, meta.region, meta.vintage].filter(Boolean).join(' · '))}
+          ${quality ? '<br>Qualität: ' + escapeHtml(quality) : ''}
+          <br><span style="font-size:11px">${dateStr} ${timeStr}</span>
+        </div>
+      </div>
+      <div class="saved-actions">
+        <button class="icon-btn" data-action="load" data-id="${entry.id}">Öffnen</button>
+        <button class="icon-btn" data-action="export" data-id="${entry.id}">Text</button>
+        <button class="icon-btn danger" data-action="delete" data-id="${entry.id}">Löschen</button>
+      </div>`;
+    container.appendChild(item);
+  });
+  container.querySelectorAll('button[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'load') loadTasting(id);
+      else if (action === 'delete') deleteTasting(id);
+      else if (action === 'export') {
+        const list = getAllTastings();
+        const entry = list.find(e => e.id === id);
+        if (entry) copyToClipboard(stateToText(entry.data, entry.wineType || currentType));
+      }
+    });
+  });
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function exportBackup() {
+  const backup = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    tastings: {
+      rot: getAllTastings('rot'),
+      weiss: getAllTastings('weiss'),
+      rose: getAllTastings('rose')
+    }
+  };
+  const total = backup.tastings.rot.length + backup.tastings.weiss.length + backup.tastings.rose.length;
+  if (total === 0) { showToast('Keine Verkostungen zum Sichern vorhanden'); return; }
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'wset-backup-' + ts + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup heruntergeladen (' + total + ' Verkostungen)');
+}
+
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.tastings) throw new Error('Ungültiges Backup-Format');
+      const ok = confirm('Backup einspielen?\n\nOK = Mit bestehenden Verkostungen zusammenführen\nAbbrechen = Vorgang abbrechen');
+      if (!ok) return;
+      ['rot','weiss','rose'].forEach(type => {
+        if (!Array.isArray(data.tastings[type])) return;
+        const existing = getAllTastings(type);
+        const existingIds = new Set(existing.map(e => e.id));
+        const newOnes = data.tastings[type].filter(e => !existingIds.has(e.id));
+        const combined = [...newOnes, ...existing].sort((a,b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+        setAllTastings(combined, type);
+      });
+      renderSavedList();
+      showToast('Backup eingespielt');
+    } catch (err) {
+      showToast('Fehler: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function stateToText(s, type) {
+  const lines = [];
+  const typeLabel = WINE_TYPES[type || currentType].label.toUpperCase();
+  lines.push('WSET LEVEL 2 — SYSTEMATISCHES VERKOSTEN (' + typeLabel + ')');
+  lines.push('='.repeat(50));
+  lines.push('');
+  if (s.meta.name) lines.push('Wein: ' + s.meta.name);
+  if (s.meta.producer) lines.push('Produzent: ' + s.meta.producer);
+  if (s.meta.region) lines.push('Region: ' + s.meta.region);
+  if (s.meta.vintage) lines.push('Jahrgang: ' + s.meta.vintage);
+  if (s.meta.grape) lines.push('Rebsorte: ' + s.meta.grape);
+  if (s.meta.date) lines.push('Datum: ' + s.meta.date);
+  lines.push('');
+  const f = s.fields || {};
+  const fmt = v => Array.isArray(v) ? (v.length ? v.join(', ') : '—') : (v || '—');
+  lines.push('OPTISCHER EINDRUCK');
+  lines.push('  Klarheit: ' + fmt(f.klarheit));
+  lines.push('  Farbtiefe: ' + fmt(f.farbtiefe));
+  lines.push('  Farbton: ' + fmt(f.farbton));
+  lines.push('');
+  lines.push('GERUCH');
+  lines.push('  Reintönigkeit: ' + fmt(f.reintoenigkeit));
+  lines.push('  Intensität: ' + fmt(f['geruch-intensitaet']));
+  lines.push('  Aromaausprägung: ' + fmt(f.aromaauspraegung));
+  lines.push('');
+  lines.push('GESCHMACK');
+  lines.push('  Süsse: ' + fmt(f.suesse));
+  lines.push('  Säure: ' + fmt(f.saeure));
+  lines.push('  Tannin: ' + fmt(f.tannin));
+  lines.push('  Alkohol: ' + fmt(f.alkohol));
+  lines.push('  Körper: ' + fmt(f.koerper));
+  lines.push('  Geschmacksintensität: ' + fmt(f['geschmack-intensitaet']));
+  lines.push('  Geschmacksausprägung: ' + fmt(f.geschmacksauspraegung));
+  lines.push('  Abgang: ' + fmt(f.abgang));
+  lines.push('');
+  lines.push('GESAMTEINDRUCK');
+  lines.push('  Qualität: ' + fmt(f.qualitaet));
+  lines.push('');
+  const aromaLines = aromasToLines(s.aromas);
+  if (aromaLines.length) {
+    lines.push('AROMEN UND GESCHMACKSNOTEN');
+    aromaLines.forEach(l => lines.push('  ' + l));
+    lines.push('');
+  }
+  if (s.notes) {
+    lines.push('NOTIZEN');
+    lines.push(s.notes);
+  }
+  return lines.join('\n');
+}
+
+function aromasToLines(scope) {
+  if (!scope) return [];
+  const out = [];
+  Object.keys(scope).forEach(cat => {
+    const list = scope[cat];
+    if (Array.isArray(list) && list.length) out.push(cat + ': ' + list.join(', '));
+  });
+  return out;
+}
+
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      showToast('In Zwischenablage kopiert');
+      return;
+    }
+  } catch (e) {}
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); showToast('Kopiert'); }
+  catch { showToast('Kopieren fehlgeschlagen'); }
+  document.body.removeChild(ta);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'saved') renderSavedList();
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+document.querySelectorAll('.wine-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchWineType(btn.dataset.type));
+});
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+document.getElementById('btn-save').addEventListener('click', saveTasting);
+document.getElementById('btn-export').addEventListener('click', () => {
+  readMetaIntoState();
+  copyToClipboard(stateToText(state(), currentType));
+});
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Aktuelles Formular wirklich leeren?')) return;
+  allStates[currentType] = freshState();
+  allStates[currentType].meta.date = new Date().toISOString().split('T')[0];
+  clearDraft();
+  syncFormFromState();
+  showToast('Formular geleert');
+});
+document.getElementById('btn-backup-export').addEventListener('click', exportBackup);
+document.getElementById('btn-backup-import').addEventListener('click', () => {
+  document.getElementById('backup-file-input').click();
+});
+document.getElementById('backup-file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) importBackup(file);
+  e.target.value = '';
+});
+
+function init() {
+  storageAvailable = checkStorage();
+  if (!storageAvailable) {
+    const w = document.getElementById('storage-warning');
+    w.textContent = '⚠ Lokaler Speicher nicht verfügbar (Privat-Modus oder Cookies deaktiviert). Verkostungen können in dieser Sitzung nicht dauerhaft gespeichert werden.';
+    w.classList.add('show');
+  }
+  const today = new Date().toISOString().split('T')[0];
+  ['rot','weiss','rose'].forEach(type => {
+    const draft = loadDraft(type);
+    if (draft) allStates[type] = draft;
+    else allStates[type].meta.date = today;
+  });
+  renderStaticPills();
+  renderFarbtonPills();
+  renderAromaSelector();
+  renderLexikon();
+  syncFormFromState();
+}
+
+init();
+</script>
+
+</body>
+</html>
