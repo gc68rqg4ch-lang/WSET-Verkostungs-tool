@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WSET Level 3 SAT – Verkostungstool</title>
+<style>
+:root{--bg:#f4f0e8;--paper:#fff;--ink:#191919;--muted:#6c675f;--line:#d8d0c2;--accent:#722f37;--gold:#ad8725;--rose:#c37988}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.45}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 70px}.top{position:sticky;top:0;z-index:20;background:rgba(244,240,232,.95);backdrop-filter:blur(10px);padding:10px 0 8px}
+h1{font-size:23px;margin:0}.sub{font-size:13px;color:var(--muted);font-style:italic}
+.toolbar,.types{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.btn,.type{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:10px 13px;font:600 14px Georgia;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:white}.type.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+body[data-type=weiss] .type.active,body[data-type=weiss] .btn.primary{background:var(--gold);border-color:var(--gold)}
+body[data-type=rose] .type.active,body[data-type=rose] .btn.primary{background:var(--rose);border-color:var(--rose)}
+.card{background:var(--paper);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.06);margin:14px 0;overflow:hidden}
+.title{background:#1c1c1c;color:#fff;padding:11px 15px;font-weight:bold}.subtitle{background:#303030;color:#d9d0c1;padding:6px 15px;font-size:12px;font-style:italic}
+.meta{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.meta label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+input,textarea{width:100%;margin-top:4px;border:1px solid var(--line);background:#faf8f3;border-radius:7px;padding:9px;font:15px Georgia;color:var(--ink)}
+textarea{min-height:90px;resize:vertical}.row{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:start;padding:11px 15px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}.label{font-weight:bold;font-size:14px}.hint{display:block;font-size:11px;color:var(--muted);font-weight:normal;font-style:italic;margin-top:2px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}.pill{border:1px solid var(--line);background:#f7f3eb;border-radius:999px;padding:8px 12px;font:14px Georgia;cursor:pointer}
+.pill.sel{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:bold}
+body[data-type=weiss] .pill.sel{background:var(--gold);border-color:var(--gold)}body[data-type=rose] .pill.sel{background:var(--rose);border-color:var(--rose)}
+.aroma-head{background:#3c3c3c;color:white;padding:8px 15px;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:.03em}
+.aroma-sub{background:#4b4b4b;color:#d9d0c1;padding:5px 15px;font-size:11px;font-style:italic}
+.qualitybox{padding:14px 15px;background:#f2ece0}.score{font-size:28px;font-weight:bold}.quality{font-size:17px;font-weight:bold;margin-left:10px}
+.saved{padding:12px 15px}.saved-item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.saved-item:last-child{border:0}.saved-name{font-weight:bold}.small{font-size:12px;color:var(--muted)}.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#171717;color:#fff;padding:10px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
+@media(max-width:650px){.meta{grid-template-columns:1fr}.row{grid-template-columns:1fr}.top{position:static}h1{font-size:20px}}
+</style>
+</head>
+<body data-type="rot">
+<div class="wrap">
+<div class="top" id="page-top">
+  <h1>WSET Level 3 – Systematisches Verkosten von Wein</h1>
+  <div class="sub">Vollständige SAT-Struktur für Stillwein, mit Level-3-Abstufungen und Weinlexikon.</div>
+  <div class="types">
+    <button class="type active" data-type="rot">Rotwein</button>
+    <button class="type" data-type="weiss">Weisswein</button>
+    <button class="type" data-type="rose">Rosé</button>
+  </div>
+  <div class="toolbar">
+    <button class="btn primary" id="saveTop">Speichern</button>
+    <button class="btn" id="clearTop">Formular leeren</button>
+    <button class="btn" id="copyTop">Als Text kopieren</button>
+    <button class="btn" id="toggleSaved">Gespeicherte anzeigen</button>
+  </div>
+</div>
+
+<section class="card">
+<div class="title">Wein</div>
+<div class="meta">
+<label>Wein-Name<input id="name"></label><label>Produzent<input id="producer"></label>
+<label>Region / Land<input id="region"></label><label>Jahrgang<input id="vintage"></label>
+<label>Rebsorte(n)<input id="grape"></label><label>Datum<input type="date" id="date"></label>
+</div>
+</section>
+
+<section class="card">
+<div class="title">Optischer Eindruck</div>
+<div class="row"><div class="label">Klarheit</div><div class="pills field" data-key="klarheit" data-options="klar|trüb (fehlerhaft?)"></div></div>
+<div class="row"><div class="label">Farbtiefe</div><div class="pills field" data-key="farbtiefe" data-options="blass|mittel|tief"></div></div>
+<div class="row"><div class="label">Farbton</div><div class="pills field" id="colourPills" data-key="farbton"></div></div>
+<div class="row"><div class="label">Andere Eindrücke<span class="hint">z. B. Schlieren/Tränen, Depot, Perlage, Bläschen</span></div><textarea id="appearanceOther"></textarea></div>
+</section>
+
+<section class="card">
+<div class="title">Geruch</div>
+<div class="row"><div class="label">Reintönigkeit</div><div class="pills field" data-key="reintoenigkeit" data-options="sauber|unsauber (fehlerhaft?)"></div></div>
+<div class="row"><div class="label">Intensität</div><div class="pills field" data-key="geruchIntensitaet" data-options="verhalten|mittel (−)|mittel|mittel (+)|ausgeprägt"></div></div>
+<div class="row"><div class="label">Aromaausprägung<span class="hint">Mehrfachauswahl</span></div><div class="pills field multi" data-key="aromaauspraegung" data-options="primär|sekundär|tertiär"></div></div>
+<div class="row"><div class="label">Entwicklungsstadium</div><div class="pills field" data-key="entwicklung" data-options="jugendlich|erste Reifenoten|voll gereift|müde / Höhepunkt überschritten"></div></div>
+</section>
+
+<section class="card">
+<div class="title">Aromen und Geschmacksnoten</div>
+<div class="subtitle">WSET-Level-3-Weinlexikon – passende andere Begriffe können zusätzlich in den Notizen erfasst werden.</div>
+<div id="aromas"></div>
+</section>
+
+<section class="card">
+<div class="title">Geschmack</div>
+<div class="row"><div class="label">Süsse</div><div class="pills field" data-key="suesse" data-options="trocken|fast trocken|halbtrocken|halbsüss|süss|üppig"></div></div>
+<div class="row"><div class="label">Säure</div><div class="pills field" data-key="saeure" data-options="niedrig|mittel (−)|mittel|mittel (+)|hoch"></div></div>
+<div class="row" id="tanninRow"><div class="label">Tannin</div><div class="pills field" data-key="tannin" data-options="niedrig|mittel (−)|mittel|mittel (+)|hoch"></div></div>
+<div class="row"><div class="label">Alkohol</div><div class="pills field" data-key="alkohol" data-options="niedrig|mittel|hoch"></div></div>
+<div class="row"><div class="label">Körper</div><div class="pills field" data-key="koerper" data-options="schlank|mittel (−)|mittel|mittel (+)|voll"></div></div>
+<div class="row" id="mousseRow"><div class="label">Mousse<span class="hint">nur bei Schaumwein relevant</span></div><div class="pills field" data-key="mousse" data-options="fein|cremig|aggressiv"></div></div>
+<div class="row"><div class="label">Geschmacksintensität</div><div class="pills field" data-key="geschmackIntensitaet" data-options="zart|mittel (−)|mittel|mittel (+)|ausgeprägt"></div></div>
+<div class="row"><div class="label">Geschmacksausprägung<span class="hint">Mehrfachauswahl</span></div><div class="pills field multi" data-key="geschmacksauspraegung" data-options="primär|sekundär|tertiär"></div></div>
+<div class="row"><div class="label">Abgang</div><div class="pills field" data-key="abgang" data-options="kurz|mittel (−)|mittel|mittel (+)|lang"></div></div>
+</section>
+
+<section class="card">
+<div class="title">Gesamteindruck – Qualitätsbeurteilung</div>
+<div class="subtitle">Die Qualitätsbeurteilung erfolgt nach Balance, Länge, Intensität und Komplexität. Die Punkte sind eine Lernhilfe, keine offizielle WSET-Rechenformel.</div>
+<div class="row"><div class="label">Balance<span class="hint">Level-2-Voreinstellung: 1 Punkt; für Level 3 manuell änderbar</span></div><div class="pills field scorefield" data-key="balance" data-options="0|0.5|1"></div></div>
+<div class="row"><div class="label">Länge<span class="hint">automatischer Vorschlag aus Abgang</span></div><div class="pills field scorefield" data-key="laenge" data-options="0|0.5|1"></div></div>
+<div class="row"><div class="label">Intensität<span class="hint">automatischer Vorschlag aus Geschmacksintensität</span></div><div class="pills field scorefield" data-key="intensitaet" data-options="0|0.5|1"></div></div>
+<div class="row"><div class="label">Komplexität<span class="hint">automatischer Vorschlag aus Vielfalt, Präzision sowie primären/sekundären/tertiären Ebenen</span></div><div class="pills field scorefield" data-key="komplexitaet" data-options="0|0.5|1"></div></div>
+<div class="qualitybox"><span class="score" id="score">—</span><span>/ 4</span><span class="quality" id="qualityText">—</span></div>
+<div class="row"><div class="label">Qualität</div><div class="pills field" data-key="qualitaet" data-options="fehlerhaft|schwach|durchschnittlich|gut|sehr gut|hervorragend"></div></div>
+<div class="row"><div class="label">Trinkreife / Reifungspotenzial</div><div class="pills field" data-key="trinkreife" data-options="zu jung|kann jetzt getrunken werden, hat aber noch Reifungspotenzial|jetzt trinken: nicht für Alterung oder weitere Lagerung geeignet|zu alt"></div></div>
+</section>
+
+<section class="card"><div class="title">Notizen</div><div style="padding:14px"><textarea id="notes" placeholder="Begründung der Qualität, genaue Aromen, Identifikation, Speisenbegleitung usw."></textarea></div></section>
+
+<div class="toolbar">
+<button class="btn primary" id="saveBottom">Speichern</button><button class="btn" id="clearBottom">Formular leeren</button><button class="btn" id="copyBottom">Als Text kopieren</button>
+</div>
+
+<section class="card hidden" id="savedCard"><div class="title">Gespeicherte Verkostungen</div><div class="saved" id="savedList"></div></section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const COLOURS={
+ rot:["purpurrot","rubinrot","granatrot","braunrot","braun"],
+ weiss:["grüngelb","zitronengelb","goldgelb","bernsteingelb","braun"],
+ rose:["hellrosa","lachsfarben","orange"]
+};
+const AROMAS={
+ primary:{
+  title:"Primäre Aromen und Geschmacksnoten",
+  sub:"Aus der Traube und aus der alkoholischen Gärung",
+  groups:[
+   ["Floral","Akazie|Geissblatt|Kamille|Holunderblüte|Geranie|Blüten|Rose|Veilchen"],
+   ["Grüne Früchte","Apfel|Stachelbeere|Birne|Birnendrops|Quitte|Traube"],
+   ["Zitrusfrüchte","Grapefruit|Zitrone|Limettensaft|Limettenschale|Orangenschale|Zitronenschale"],
+   ["Steinobst","Pfirsich|Aprikose|Nektarine"],
+   ["Tropische Früchte","Banane|Litschi|Mango|Melone|Passionsfrucht|Ananas"],
+   ["Rote Früchte","Rote Johannisbeere|Preiselbeere|Himbeere|Erdbeere|rote Kirsche|rote Pflaume"],
+   ["Schwarze Früchte","Schwarze Johannisbeere|Brombeere|Heidelbeere|schwarze Kirsche|schwarze Pflaume"],
+   ["Getrocknete / gekochte Früchte","Feige|Backpflaume|Rosine|Sultanine|Kirschwasser|marmeladig|gebackene Früchte|Fruchtkompott|Fruchtkonserve"],
+   ["Krautig","grüne Paprikaschote|Gras|Tomatenblätter|Spargel|Schwarze Johannisbeerblätter"],
+   ["Kräuterwürzig","Eukalyptus|Minze|medizinisch|Lavendel|Fenchel|Dill"],
+   ["Scharfe Gewürze","schwarzer Pfeffer|weisser Pfeffer|Lakritze"],
+   ["Andere","Feuerstein|nasse Steine|nasse Wolle"]
+  ]
+ },
+ secondary:{
+  title:"Sekundäre Aromen und Geschmacksnoten",
+  sub:"Aus der Weinbereitung nach der Gärung",
+  groups:[
+   ["Hefe / Hefesatz / Autolyse","Biskuit|Brot|Toast|Gebäck|Brioche|Brotteig|Käse"],
+   ["Biologischer Säureabbau","Butter|Käse|Sahne"],
+   ["Eiche","Vanille|Gewürznelke|Muskatnuss|Kokosnuss|Karamellbonbon|Toast|Zedernholz|Holzkohle|Rauch|Schokolade|Kaffee|Harz"]
+  ]
+ },
+ tertiary:{
+  title:"Tertiäre Aromen und Geschmacksnoten",
+  sub:"Aus der Reifung",
+  groups:[
+   ["Absichtliche Oxidation","Mandel|Marzipan|Haselnuss|Walnuss|Schokolade|Kaffee|Toffee|Karamell"],
+   ["Fruchtentwicklung – Weisswein","getrocknete Aprikose|Marmelade|getrockneter Apfel|getrocknete Banane"],
+   ["Fruchtentwicklung – Rotwein","Feige|Backpflaume|Teer|getrocknete Brombeere|getrocknete Preiselbeere|gekochte Brombeere|gekochte rote Pflaume"],
+   ["Flaschenreife – Weisswein","Benzin / Petrolnote|Kerosin|Zimt|Ingwer|Muskatnuss|Toast|nussig|Pilze|Heu|Honig"],
+   ["Flaschenreife – Rotwein","Leder|Waldboden|Erde|Pilze|Wildbret|Tabak|vegetabil|feuchtes Laub|fleischig|Bauernhof"]
+  ]
+ }
+};
+const STORAGE="wset_l3_sat_tastings_v1",DRAFT="wset_l3_sat_draft_v1";
+let type="rot",data=fresh(),manualScores=new Set();
+
+function fresh(){return{type:"rot",meta:{date:new Date().toISOString().slice(0,10)},fields:{balance:"1"},aromas:{},appearanceOther:"",notes:""}}
+function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+function pills(container,options,key,multi=false,aromaGroup=null){
+ container.innerHTML="";
+ options.forEach(opt=>{const b=document.createElement("button");b.type="button";b.className="pill";b.textContent=opt;b.dataset.value=opt;
+ b.onclick=()=>{if(aromaGroup){const arr=data.aromas[aromaGroup]||[];data.aromas[aromaGroup]=arr.includes(opt)?arr.filter(x=>x!==opt):arr.concat(opt);if(!data.aromas[aromaGroup].length)delete data.aromas[aromaGroup]}
+ else if(multi){const arr=Array.isArray(data.fields[key])?data.fields[key]:[];data.fields[key]=arr.includes(opt)?arr.filter(x=>x!==opt):arr.concat(opt)}
+ else{data.fields[key]=data.fields[key]===opt?null:opt;if(["balance","laenge","intensitaet","komplexitaet"].includes(key))manualScores.add(key)}
+ saveDraft();renderSelections();autoEvaluate()};container.appendChild(b)})
+}
+function renderFields(){document.querySelectorAll(".field[data-options]").forEach(c=>pills(c,c.dataset.options.split("|"),c.dataset.key,c.classList.contains("multi")));
+ pills(document.getElementById("colourPills"),COLOURS[type],"farbton")}
+function renderAromas(){const root=document.getElementById("aromas");root.innerHTML="";
+ Object.entries(AROMAS).forEach(([level,block])=>{const h=document.createElement("div");h.className="aroma-head";h.textContent=block.title;root.appendChild(h);
+ const sub=document.createElement("div");sub.className="aroma-sub";sub.textContent=block.sub;root.appendChild(sub);
+ block.groups.forEach(([group,list])=>{const r=document.createElement("div");r.className="row";const l=document.createElement("div");l.className="label";l.textContent=group;
+ const p=document.createElement("div");p.className="pills";p.dataset.aroma=group;pills(p,list.split("|"),null,true,group);r.append(l,p);root.appendChild(r)})})}
+function renderSelections(){
+ document.querySelectorAll(".field").forEach(c=>{const key=c.dataset.key,val=data.fields[key];c.querySelectorAll(".pill").forEach(p=>p.classList.toggle("sel",Array.isArray(val)?val.includes(p.dataset.value):val===p.dataset.value))});
+ document.querySelectorAll("[data-aroma]").forEach(c=>{const arr=data.aromas[c.dataset.aroma]||[];c.querySelectorAll(".pill").forEach(p=>p.classList.toggle("sel",arr.includes(p.dataset.value)))})
+}
+function syncInputsToData(){["name","producer","region","vintage","grape","date"].forEach(k=>data.meta[k]=document.getElementById(k).value);data.appearanceOther=document.getElementById("appearanceOther").value;data.notes=document.getElementById("notes").value}
+function syncDataToInputs(){["name","producer","region","vintage","grape","date"].forEach(k=>document.getElementById(k).value=data.meta[k]||"");document.getElementById("appearanceOther").value=data.appearanceOther||"";document.getElementById("notes").value=data.notes||""}
+function switchType(t){syncInputsToData();type=t;data.type=t;document.body.dataset.type=t;document.querySelectorAll(".type").forEach(b=>b.classList.toggle("active",b.dataset.type===t));
+ document.getElementById("tanninRow").classList.toggle("hidden",t!=="rot");renderFields();renderAromas();renderSelections();autoEvaluate();saveDraft()}
+function aromaStats(){const groups=Object.keys(data.aromas).filter(k=>(data.aromas[k]||[]).length),count=groups.reduce((n,k)=>n+data.aromas[k].length,0);
+ const levels={primary:0,secondary:0,tertiary:0};Object.entries(AROMAS).forEach(([level,b])=>b.groups.forEach(([g])=>{if((data.aromas[g]||[]).length)levels[level]++}));
+ return{groups:groups.length,count,levels}}
+function suggestedScore(key){
+ if(key==="balance")return 1;
+ if(key==="laenge"){const m={"kurz":0,"mittel (−)":0.25,"mittel":0.5,"mittel (+)":0.75,"lang":1};return m[data.fields.abgang]??null}
+ if(key==="intensitaet"){const m={"zart":0,"mittel (−)":0.25,"mittel":0.5,"mittel (+)":0.75,"ausgeprägt":1};return m[data.fields.geschmackIntensitaet]??null}
+ if(key==="komplexitaet"){const s=aromaStats(),layers=Object.values(s.levels).filter(x=>x>0).length;if(s.count===0)return null;
+   if(s.count>=7&&s.groups>=4&&layers>=2)return 1;if(s.count>=4&&s.groups>=3)return .5;return 0}
+ return null
+}
+function autoEvaluate(){
+ ["balance","laenge","intensitaet","komplexitaet"].forEach(k=>{if(!manualScores.has(k)){const v=suggestedScore(k);if(v!==null)data.fields[k]=String(v)}});
+ const keys=["balance","laenge","intensitaet","komplexitaet"],vals=keys.map(k=>parseFloat(data.fields[k])).filter(Number.isFinite);
+ if(vals.length){const sum=vals.reduce((a,b)=>a+b,0),q=sum>=3.75?"hervorragend":sum>=3?"sehr gut":sum>=2?"gut":sum>=1?"durchschnittlich":"schwach";
+   document.getElementById("score").textContent=String(Math.round(sum*100)/100);document.getElementById("qualityText").textContent="→ "+q;
+   if(!data.fields.qualitaet||data.fields._autoQuality){data.fields.qualitaet=q;data.fields._autoQuality=true}}
+ else{document.getElementById("score").textContent="—";document.getElementById("qualityText").textContent="—"}
+ if(data.fields.klarheit==="trüb (fehlerhaft?)"||data.fields.reintoenigkeit==="unsauber (fehlerhaft?)"){data.fields.qualitaet="fehlerhaft";data.fields._autoQuality=true}
+ renderSelections();saveDraft()
+}
+function saveDraft(){syncInputsToData();localStorage.setItem(DRAFT,JSON.stringify(data))}
+function clearForm(){if(!confirm("Formular wirklich leeren?"))return;data=fresh();manualScores.clear();type="rot";switchType("rot");syncDataToInputs();saveDraft();window.scrollTo({top:0,behavior:"smooth"});toast("Formular geleert")}
+function getSaved(){try{return JSON.parse(localStorage.getItem(STORAGE)||"[]")}catch{return[]}}
+function setSaved(a){localStorage.setItem(STORAGE,JSON.stringify(a))}
+function saveTasting(){syncInputsToData();if(!data.meta.name){toast("Bitte Wein-Name eingeben");return}const list=getSaved();list.unshift({id:Date.now(),savedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))});setSaved(list);renderSaved();saveDraft();window.scrollTo({top:0,behavior:"smooth"});toast("Gespeichert – Formular bleibt erhalten")}
+function loadTasting(id){const e=getSaved().find(x=>x.id===id);if(!e)return;data=JSON.parse(JSON.stringify(e.data));type=data.type||"rot";manualScores.clear();switchType(type);syncDataToInputs();renderSelections();autoEvaluate();window.scrollTo({top:0,behavior:"smooth"});toast("Verkostung geladen")}
+function removeTasting(id){if(!confirm("Gespeicherte Verkostung löschen?"))return;setSaved(getSaved().filter(x=>x.id!==id));renderSaved()}
+function renderSaved(){const root=document.getElementById("savedList"),list=getSaved();root.innerHTML=list.length?"":"Noch keine Verkostungen gespeichert.";
+ list.forEach(e=>{const d=document.createElement("div");d.className="saved-item";d.innerHTML=`<div><div class="saved-name">${escapeHtml(e.data.meta.name||"Ohne Namen")}</div><div class="small">${escapeHtml([e.data.meta.producer,e.data.meta.vintage,e.data.fields.qualitaet].filter(Boolean).join(" · "))}</div></div><div><button class="btn" data-load="${e.id}">Öffnen</button> <button class="btn" data-del="${e.id}">Löschen</button></div>`;root.appendChild(d)});
+ root.querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>loadTasting(Number(b.dataset.load)));root.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>removeTasting(Number(b.dataset.del)))}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function toText(){syncInputsToData();const f=data.fields,lines=["WSET LEVEL 3 – SYSTEMATISCHES VERKOSTEN","",`Wein: ${data.meta.name||"—"}`,`Produzent: ${data.meta.producer||"—"}`,`Region: ${data.meta.region||"—"}`,`Jahrgang: ${data.meta.vintage||"—"}`,`Rebsorte(n): ${data.meta.grape||"—"}`,"","OPTISCHER EINDRUCK",`Klarheit: ${f.klarheit||"—"}`,`Farbtiefe: ${f.farbtiefe||"—"}`,`Farbton: ${f.farbton||"—"}`,`Andere Eindrücke: ${data.appearanceOther||"—"}`,"","GERUCH",`Reintönigkeit: ${f.reintoenigkeit||"—"}`,`Intensität: ${f.geruchIntensitaet||"—"}`,`Aromaausprägung: ${(f.aromaauspraegung||[]).join(", ")||"—"}`,`Entwicklungsstadium: ${f.entwicklung||"—"}`,"","AROMEN"];
+ Object.entries(data.aromas).forEach(([k,v])=>lines.push(`${k}: ${v.join(", ")}`));lines.push("","GESCHMACK",`Süsse: ${f.suesse||"—"}`,`Säure: ${f.saeure||"—"}`);
+ if(type==="rot")lines.push(`Tannin: ${f.tannin||"—"}`);lines.push(`Alkohol: ${f.alkohol||"—"}`,`Körper: ${f.koerper||"—"}`,`Mousse: ${f.mousse||"—"}`,`Geschmacksintensität: ${f.geschmackIntensitaet||"—"}`,`Geschmacksausprägung: ${(f.geschmacksauspraegung||[]).join(", ")||"—"}`,`Abgang: ${f.abgang||"—"}`,"","GESAMTEINDRUCK",`Qualität: ${f.qualitaet||"—"}`,`Trinkreife/Reifungspotenzial: ${f.trinkreife||"—"}`,"",`Notizen: ${data.notes||"—"}`);return lines.join("\n")}
+async function copyText(){try{await navigator.clipboard.writeText(toText());toast("In Zwischenablage kopiert")}catch{toast("Kopieren nicht möglich")}}
+
+document.querySelectorAll(".type").forEach(b=>b.onclick=()=>switchType(b.dataset.type));
+["name","producer","region","vintage","grape","date","appearanceOther","notes"].forEach(id=>document.getElementById(id).addEventListener("input",saveDraft));
+document.getElementById("saveTop").onclick=document.getElementById("saveBottom").onclick=saveTasting;
+document.getElementById("clearTop").onclick=document.getElementById("clearBottom").onclick=clearForm;
+document.getElementById("copyTop").onclick=document.getElementById("copyBottom").onclick=copyText;
+document.getElementById("toggleSaved").onclick=()=>{document.getElementById("savedCard").classList.toggle("hidden");renderSaved()};
+
+(function init(){try{const d=JSON.parse(localStorage.getItem(DRAFT)||"null");if(d)data=d}catch{}type=data.type||"rot";renderFields();renderAromas();switchType(type);syncDataToInputs();renderSaved();autoEvaluate()})();
+</script>
+</body>
+</html>
