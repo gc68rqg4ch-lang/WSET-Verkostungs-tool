@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSET Level 2 — Systematisches Verkosten von Wein</title>
+<style>
+:root{
+  --bg:#f5f2ec;--paper:#fff;--ink:#1a1a1a;--muted:#6b6b6b;--line:#d8d3c8;
+  --accent:#722f37;--shadow:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06)
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-size:16px;line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 60px}
+header{margin-bottom:18px}h1{font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+.subtitle{color:var(--muted);font-size:14px;font-style:italic}
+.wine-type-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:16px 0;background:var(--paper);
+padding:6px;border-radius:10px;box-shadow:var(--shadow)}
+.wine-type-btn{background:transparent;border:none;padding:12px 8px;font:600 15px inherit;color:var(--muted);
+cursor:pointer;border-radius:7px;min-height:44px}.wine-type-btn.active{background:var(--accent);color:#fff}
+.wine-type-btn[data-type="weiss"].active{background:#b8932a}.wine-type-btn[data-type="rose"].active{background:#c97b8b}
+.tabs{display:flex;gap:4px;margin:6px 0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{background:none;border:none;padding:12px 14px;font:15px inherit;color:var(--muted);cursor:pointer;
+border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}.tab.active{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.panel{display:none}.panel.active{display:block}
+.meta{background:var(--paper);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:18px;
+display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}.meta label{display:flex;flex-direction:column;font-size:12px;
+color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.meta input{margin-top:4px;border:1px solid var(--line);
+background:var(--bg);border-radius:6px;padding:8px 10px;font:15px inherit;color:var(--ink)}
+.section{background:var(--paper);border-radius:8px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.section-title{background:#1a1a1a;color:#fff;padding:10px 16px;font-weight:600;font-size:15px;letter-spacing:.02em}
+.section-subtitle{background:#2a2a2a;color:#d0c8b8;padding:6px 16px;font-size:12px;font-style:italic}
+.row{display:grid;grid-template-columns:150px 1fr;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);gap:12px}
+.row:last-child{border-bottom:none}.row-label{font-size:14px;font-weight:600}.row-sublabel{font-size:12px;color:var(--muted);
+font-style:italic;display:block;margin-top:2px;font-weight:400}.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:999px;
+font:14px inherit;cursor:pointer;min-height:36px}.pill.selected{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+body[data-wine-type="weiss"] .pill.selected{background:#b8932a;border-color:#b8932a}
+body[data-wine-type="rose"] .pill.selected{background:#c97b8b;border-color:#c97b8b}
+textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:10px 12px;
+font:15px inherit;resize:vertical;min-height:80px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+.btn{background:var(--accent);color:#fff;border:none;padding:12px 18px;border-radius:6px;font:600 15px inherit;cursor:pointer;min-height:44px}
+body[data-wine-type="weiss"] .btn{background:#b8932a}body[data-wine-type="rose"] .btn{background:#c97b8b}
+.btn.secondary{background:var(--paper)!important;color:var(--ink);border:1px solid var(--line)}
+.saved-list{display:flex;flex-direction:column;gap:8px}.saved-item{background:var(--paper);border-radius:8px;padding:12px 14px;
+box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:12px}.saved-info{flex:1;min-width:0}
+.saved-name{font-weight:600;font-size:15px}.saved-meta{font-size:13px;color:var(--muted);margin-top:2px}
+.saved-actions{display:flex;gap:6px;flex-wrap:wrap}.icon-btn{background:var(--bg);border:1px solid var(--line);border-radius:6px;
+padding:8px 10px;font:13px inherit;cursor:pointer;min-height:36px}.icon-btn.danger{color:#a14444}
+.backup-bar{background:var(--paper);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow);margin-bottom:14px;
+display:flex;gap:8px;flex-wrap:wrap;align-items:center}.backup-bar .info{flex:1;font-size:13px;color:var(--muted);min-width:200px}
+.lex-section{background:var(--paper);border-radius:8px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+.lex-section-title{background:#1a1a1a;color:#fff;padding:10px 16px;font-weight:600;font-size:15px}
+.lex-section-sub{background:#2a2a2a;color:#d0c8b8;padding:6px 16px;font-size:12px;font-style:italic}
+.lex-row{display:grid;grid-template-columns:180px 1fr;padding:10px 16px;border-bottom:1px solid var(--line);gap:12px;font-size:14px}
+.lex-cat{font-weight:600}.lex-desc{color:var(--muted)}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+background:var(--ink);color:#fff;padding:12px 20px;border-radius:6px;font-size:14px;opacity:0;pointer-events:none;
+transition:opacity .2s;z-index:100;max-width:90%;text-align:center}.toast.show{opacity:1}.empty{text-align:center;padding:40px 20px;color:var(--muted);font-style:italic}
+.storage-warning{background:#fff4e0;border:1px solid #e8c878;border-radius:6px;padding:10px 14px;font-size:13px;color:#6b4a00;
+margin-bottom:14px;display:none}.storage-warning.show{display:block}
+.blik-grid{padding:4px 0}.blik-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);gap:14px}
+.blik-label{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.blik-letter{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;
+display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+body[data-wine-type="weiss"] .blik-letter{background:#b8932a}body[data-wine-type="rose"] .blik-letter{background:#c97b8b}
+.blik-name{font-weight:600;font-size:15px}.blik-hint{font-size:11px;color:var(--muted);font-style:italic;width:100%;margin-left:38px;margin-top:-2px}
+.blik-pills .pill{min-width:44px;text-align:center;padding:8px 12px}.pill.auto-set{background:#ebe6dc;border-style:dashed;border-color:var(--accent);color:var(--ink)}
+body[data-wine-type="weiss"] .pill.auto-set{border-color:#b8932a}body[data-wine-type="rose"] .pill.auto-set{border-color:#c97b8b}
+.pill.auto-set.selected{background:var(--accent);color:#fff;border-style:solid}
+body[data-wine-type="weiss"] .pill.auto-set.selected{background:#b8932a}body[data-wine-type="rose"] .pill.auto-set.selected{background:#c97b8b}
+.blik-summary{background:#f0ebe1;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid var(--line)}
+.blik-total{display:flex;align-items:baseline;gap:4px}.blik-total-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-right:6px}
+.blik-total-value{font-size:28px;font-weight:700;color:var(--accent)}body[data-wine-type="weiss"] .blik-total-value{color:#b8932a}
+body[data-wine-type="rose"] .blik-total-value{color:#c97b8b}.blik-total-max{color:var(--muted);font-size:16px}.blik-quality{font-size:16px;font-weight:600;text-align:right}
+.nez-header,.nez-stats,.nez-slot{background:var(--paper);border-radius:8px;box-shadow:var(--shadow)}.nez-header{padding:14px 16px;margin-bottom:14px}
+.nez-title{font-size:20px;font-weight:600;margin:0 0 4px}.nez-subtitle{color:var(--muted);font-size:14px;font-style:italic}
+.nez-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px;margin-bottom:14px}.nez-stat{text-align:center;padding:6px}
+.nez-stat-value{font-size:24px;font-weight:700;color:var(--accent)}.nez-stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.nez-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}.nez-slot{padding:12px;border-left:4px solid var(--line)}
+.nez-slot.correct{border-left-color:#4a8a3f;background:#f0f7ed}.nez-slot.wrong{border-left-color:#a14444;background:#f9efef}.nez-slot.pending{border-left-color:var(--accent)}
+.nez-slot-number{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.nez-slot label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 3px;font-weight:600}
+.nez-slot select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;font:14px inherit;min-height:38px}
+.nez-resolve{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}.nez-resolve summary{font-size:12px;color:var(--muted);cursor:pointer;padding:4px 0;text-transform:uppercase}
+.nez-history-item{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.nez-history-info{flex:1}.nez-history-date{font-size:14px;font-weight:600}.nez-history-score{font-size:13px;color:var(--muted)}
+.nez-aroma-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;gap:12px}
+.nez-aroma-name{font-weight:600}.nez-aroma-tries{color:var(--muted);font-size:12px}.nez-aroma-pct{font-weight:700;min-width:50px;text-align:right}
+.nez-aroma-pct.good{color:#4a8a3f}.nez-aroma-pct.poor{color:#a14444}.nez-aroma-pct.mid{color:#b8932a}
+@media(max-width:600px){.meta{grid-template-columns:1fr}.row{grid-template-columns:110px 1fr}.lex-row{grid-template-columns:130px 1fr}
+h1{font-size:20px}.pill{padding:8px 12px;font-size:13px}.nez-slots{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-wine-type="rot">
+<div class="wrap">
+<header><h1>WSET Level 2 — Systematisches Verkosten von Wein</h1><div class="subtitle" id="wine-type-label">Rotwein</div></header>
+<div id="storage-warning" class="storage-warning"></div>
+<div class="wine-type-bar">
+<button class="wine-type-btn active" data-type="rot">Rotwein</button>
+<button class="wine-type-btn" data-type="weiss">Weisswein</button>
+<button class="wine-type-btn" data-type="rose">Rosé</button>
+</div>
+<div class="tabs">
+<button class="tab active" data-tab="form">Verkostung</button>
+<button class="tab" data-tab="saved">Gespeichert</button>
+<button class="tab" data-tab="lexikon">Wein-Lexikon</button>
+<button class="tab" data-tab="nez">Le Nez du Vin</button>
+</div>
+
+<div class="panel active" id="panel-form">
+<div class="meta">
+<label>Wein-Name<input id="meta-name" placeholder="z.B. Barolo 2018"></label>
+<label>Produzent<input id="meta-producer" placeholder="z.B. Vietti"></label>
+<label>Region / Land<input id="meta-region" placeholder="z.B. Piemont, Italien"></label>
+<label>Jahrgang<input id="meta-vintage" placeholder="z.B. 2018"></label>
+<label>Rebsorte(n)<input id="meta-grape" placeholder="z.B. Nebbiolo"></label>
+<label>Datum<input type="date" id="meta-date"></label>
+</div>
+
+<div class="section"><div class="section-title">Optischer Eindruck</div>
+<div class="row"><div class="row-label">Klarheit</div><div class="pills" data-field="klarheit" data-options="klar|trüb (fehlerhaft?)"></div></div>
+<div class="row"><div class="row-label">Farbtiefe</div><div class="pills" data-field="farbtiefe" data-options="blass|mittel|tief"></div></div>
+<div class="row"><div class="row-label">Farbton</div><div class="pills" data-field="farbton" id="farbton-pills"></div></div></div>
+
+<div class="section"><div class="section-title">Geruch</div>
+<div class="row"><div class="row-label">Reintönigkeit</div><div class="pills" data-field="reintoenigkeit" data-options="sauber|unsauber (fehlerhaft?)"></div></div>
+<div class="row"><div class="row-label">Intensität</div><div class="pills" data-field="geruch-intensitaet" data-options="verhalten|mittel|ausgeprägt"></div></div>
+<div class="row"><div class="row-label">Aromaausprägung<span class="row-sublabel">z. B. primär, sekundär, tertiär</span></div>
+<div class="pills" data-field="aromaauspraegung" data-multi="true" data-options="primär|sekundär|tertiär"></div></div>
+<div class="row"><div class="row-label">Fruchtreife<span class="row-sublabel">Gesamteindruck der Frucht</span></div>
+<div class="pills" data-field="fruchtreife" data-options="unreif|knapp reif|reif|überreif|getrocknet / gekocht"></div></div>
+</div>
+
+<div class="section"><div class="section-title">Aromen und Geschmacksnoten</div><div class="section-subtitle">Detailauswahl aus dem Wein-Lexikon</div><div id="aromas-container"></div></div>
+
+<div class="section"><div class="section-title">Geschmack</div>
+<div class="row"><div class="row-label">Süsse</div><div class="pills" data-field="suesse" data-options="trocken|fast trocken|mittel|süss"></div></div>
+<div class="row"><div class="row-label">Säure</div><div class="pills" data-field="saeure" data-options="niedrig|mittel|hoch"></div></div>
+<div class="row" id="tannin-row"><div class="row-label">Tannin</div><div class="pills" data-field="tannin" data-options="niedrig|mittel|hoch"></div></div>
+<div class="row"><div class="row-label">Alkohol</div><div class="pills" data-field="alkohol" data-options="niedrig|mittel|hoch"></div></div>
+<div class="row"><div class="row-label">Körper</div><div class="pills" data-field="koerper" data-options="schlank|mittel|voll"></div></div>
+<div class="row"><div class="row-label">Geschmacks-<br>intensität</div><div class="pills" data-field="geschmack-intensitaet" data-options="verhalten|mittel|ausgeprägt"></div></div>
+<div class="row"><div class="row-label">Geschmacks-<br>ausprägung<span class="row-sublabel">z. B. primär, sekundär, tertiär</span></div>
+<div class="pills" data-field="geschmacksauspraegung" data-multi="true" data-options="primär|sekundär|tertiär"></div></div>
+<div class="row"><div class="row-label">Abgang</div><div class="pills" data-field="abgang" data-options="kurz|mittel|lang"></div></div>
+</div>
+
+<div class="section"><div class="section-title">Notizen</div><div style="padding:12px 16px"><textarea id="notes" placeholder="Eigene Beobachtungen, Essensbegleitung, Trinkreife, Vergleiche…"></textarea></div></div>
+
+<div class="section"><div class="section-title">Gesamteindruck</div>
+<div class="section-subtitle">BLIK-Orientierung — Balance bleibt im Level 2 automatisch bei 1 Punkt; Länge und Intensität werden vorgeschlagen; Komplexität und Qualität beurteilst du selbst.</div>
+<div class="blik-grid">
+<div class="blik-row"><div class="blik-label"><span class="blik-letter">B</span><span class="blik-name">Balance</span>
+<span class="blik-hint">Level-2-Vorgabe: grundsätzlich ausgewogen → 1 Punkt</span></div>
+<div class="pills blik-pills" data-field="blik-balance" data-blik="balance" data-options="0|0.5|1"></div></div>
+<div class="blik-row"><div class="blik-label"><span class="blik-letter">L</span><span class="blik-name">Länge</span>
+<span class="blik-hint" id="blik-laenge-hint">automatisch aus Abgang</span></div>
+<div class="pills blik-pills" data-field="blik-laenge" data-blik="laenge" data-options="0|0.5|1"></div></div>
+<div class="blik-row"><div class="blik-label"><span class="blik-letter">I</span><span class="blik-name">Intensität</span>
+<span class="blik-hint" id="blik-intensitaet-hint">automatisch aus Geschmacksintensität</span></div>
+<div class="pills blik-pills" data-field="blik-intensitaet" data-blik="intensitaet" data-options="0|0.5|1"></div></div>
+<div class="blik-row"><div class="blik-label"><span class="blik-letter">K</span><span class="blik-name">Komplexität</span>
+<span class="blik-hint">manuell: Präzision, Vielfalt und Entwicklung der Aromen</span></div>
+<div class="pills blik-pills" data-field="blik-komplexitaet" data-blik="komplexitaet" data-options="0|0.5|1"></div></div>
+</div>
+<div class="blik-summary"><div class="blik-total"><span class="blik-total-label">Summe</span><span class="blik-total-value" id="blik-total">—</span><span class="blik-total-max">/ 4</span></div>
+<div class="blik-quality" id="blik-quality">—</div></div>
+<div class="row"><div class="row-label">Qualität<span class="row-sublabel">manuelle Schlussfolgerung; BLIK-Summe nur als Orientierung</span></div>
+<div class="pills" data-field="qualitaet" data-options="fehlerhaft|schwach|durchschnittlich|gut|sehr gut|hervorragend"></div></div>
+</div>
+
+<div class="actions"><button class="btn" id="btn-save">Verkostung speichern</button><button class="btn secondary" id="btn-export">Als Text kopieren</button><button class="btn secondary" id="btn-clear">Formular leeren</button></div>
+</div>
+
+<div class="panel" id="panel-saved"><div class="backup-bar"><div class="info">Daten werden lokal im Browser gespeichert. Backup empfohlen.</div>
+<button class="icon-btn" id="btn-backup-export">Backup herunterladen</button><button class="icon-btn" id="btn-backup-import">Backup einspielen</button>
+<input type="file" id="backup-file-input" accept=".json" style="display:none"></div><div id="saved-list" class="saved-list"></div></div>
+<div class="panel" id="panel-lexikon"><div id="lexikon-content"></div></div>
+
+<div class="panel" id="panel-nez">
+<div class="nez-header"><h2 class="nez-title">Le Nez du Vin — Übungseinheit</h2><div class="nez-subtitle">12 Aromen erschnüffeln und Vermutung eintragen. Auflösung kann nach dem Kurs nachgetragen werden.</div></div>
+<div class="nez-stats"><div class="nez-stat"><div class="nez-stat-value" id="nez-completed">0/12</div><div class="nez-stat-label">Vermutet</div></div>
+<div class="nez-stat"><div class="nez-stat-value" id="nez-correct">—</div><div class="nez-stat-label">Richtig</div></div>
+<div class="nez-stat"><div class="nez-stat-value" id="nez-percent">—</div><div class="nez-stat-label">Trefferquote</div></div></div>
+<div class="nez-slots" id="nez-slots"></div>
+<div class="actions"><button class="btn" id="btn-nez-save">Übungseinheit speichern</button><button class="btn secondary" id="btn-nez-reset">Übung zurücksetzen</button></div>
+<div class="section"><div class="section-title">Verlauf — gespeicherte Übungen</div><div id="nez-history"></div></div>
+<div class="section"><div class="section-title">Statistik pro Aroma</div><div class="section-subtitle">Wie oft hast du welches Aroma richtig erkannt?</div><div id="nez-aroma-stats" style="padding:12px 16px"></div></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WINE_TYPES={
+rot:{label:'Rotwein',farbton:['purpurrot','rubinrot','granatrot','braunrot','braun'],tertiaer:[
+{cat:"Rotwein",desc:"Trockenfrüchte, Leder, Erde, Pilze, Fleisch, Tabak, nasses Laub, Waldboden, Karamell"},
+{cat:"Absichtlich oxidierte Weine",desc:"Mandel, Haselnuss, Walnuss, Schokolade, Kaffee, Karamell"}]},
+weiss:{label:'Weisswein',farbton:['grüngelb','zitronengelb','goldgelb','bernsteingelb','braun'],tertiaer:[
+{cat:"Weisswein",desc:"Trockenfrüchte, Orangenmarmelade, Benzin/Petrolnote, Zimt, Ingwer, Muskatnuss, Mandel, Haselnuss, Honig, Karamell"},
+{cat:"Absichtlich oxidierte Weine",desc:"Mandel, Haselnuss, Walnuss, Schokolade, Kaffee, Karamell"}]},
+rose:{label:'Rosé',farbton:['hellrosa','rosa-orange','orange'],tertiaer:[
+{cat:"Weisswein",desc:"Trockenfrüchte, Orangenmarmelade, Benzin/Petrolnote, Zimt, Ingwer, Muskatnuss, Mandel, Haselnuss, Honig, Karamell"},
+{cat:"Absichtlich oxidierte Weine",desc:"Mandel, Haselnuss, Walnuss, Schokolade, Kaffee, Karamell"}]}
+};
+
+const AROMA_PRIMAER_BY_TYPE={
+rot:{title:"Primäre Aromen und Geschmacksnoten",subtitle:"Die Aromen und Geschmacksnoten aus der Traube und aus der alkoholischen Gärung",items:[
+{cat:"Floral",desc:"Blüten, Rose, Veilchen"},{cat:"Grüne Früchte",desc:"Apfel, Birne, Stachelbeere, Traube"},
+{cat:"Zitrusfrüchte",desc:"Grapefruit, Zitrone, Limette, Orange"},{cat:"Steinobst",desc:"Pfirsich, Aprikose, Nektarine"},
+{cat:"Tropische Früchte",desc:"Banane, Litschi, Mango, Melone, Passionsfrucht, Ananas"},
+{cat:"Rote Früchte",desc:"rote Johannisbeere, Cranberry, Himbeere, Erdbeere, rote Kirsche, rote Pflaume"},
+{cat:"Schwarze Früchte",desc:"schwarze Johannisbeere, Brombeere, Heidelbeere, schwarze Kirsche, schwarze Pflaume"},
+{cat:"Krautig",desc:"grüne Paprikaschote, Gras, Tomatenblätter, Spargel"},
+{cat:"Kräuterwürzig",desc:"Eukalyptus, Minze, Fenchel, Dill, getrocknete Kräuter"},
+{cat:"Gewürze",desc:"schwarzer Pfeffer, weisser Pfeffer, Lakritze"},
+{cat:"Fruchtreife",desc:"unreife Früchte, reife Früchte, getrocknete Früchte, gekochte Früchte"},
+{cat:"Andere",desc:"nasse Steine, Bonbons"}]},
+weiss:{title:"Primäre Aromen und Geschmacksnoten",subtitle:"Aromen und Geschmacksnoten aus der Traube und der alkoholischen Gärung",items:[
+{cat:"Florale Noten",desc:"Weissdorn, Akazie, Geissblatt, Holunderblüte, Kamille, Jasmin, Lindenblüte, Orangenblüte, Rose, Veilchen"},
+{cat:"Grüne Früchte",desc:"Grüner Apfel, Gelber Apfel, Birne, Stachelbeere, Traube, Birnenbonbon, Quitte"},
+{cat:"Zitrusfrüchte",desc:"Grapefruit, Zitrone, Limette, Orange, Mandarine, Zitronenschale, Limettenschale, Orangenschale"},
+{cat:"Steinobst",desc:"Weisser Pfirsich, Gelber Pfirsich, Aprikose, Nektarine"},
+{cat:"Tropische Früchte",desc:"Banane, Litschi, Mango, Melone, Passionsfrucht, Ananas, Papaya"},
+{cat:"Pflanzlich / Vegetal",desc:"Grüne Paprika, Gras, Tomatenblatt, Spargel, Brennnessel, Buchsbaum, Cassisknospe"},
+{cat:"Frische Kräuter",desc:"Minze, Fenchel, Dill, Basilikum, Zitronenmelisse, Salbei"},
+{cat:"Getrocknete Kräuter",desc:"Getrocknete Kräuter, Heu, Tee"},
+{cat:"Gewürze",desc:"Weisser Pfeffer, Schwarzer Pfeffer, Ingwer, Lakritz"},
+{cat:"Mineralisch / Erdnah",desc:"Nasser Stein, Kreide, Feuerstein, Schiefer, Salzige Note"},
+{cat:"Sonstige Primäraromen",desc:"Bonbon, Kaugummi, Muskattraube"}]},
+rose:{title:"Primäre Aromen und Geschmacksnoten",subtitle:"Die Aromen und Geschmacksnoten aus der Traube und aus der alkoholischen Gärung",items:[
+{cat:"Rote Früchte",desc:"Rote Johannisbeere, Cranberry, Himbeere, Erdbeere, Rote Kirsche, Rote Pflaume"},
+{cat:"Zitrusfrüchte",desc:"Grapefruit, Zitrone, Limette, Orange"},{cat:"Florale Noten",desc:"Rose, Veilchen, Holunderblüte"},
+{cat:"Pflanzlich / Vegetal",desc:"Grüne Paprika, Gras, Tomatenblatt, Spargel"},
+{cat:"Kräuter",desc:"Eukalyptus, Minze, Fenchel, Dill, Getrocknete Kräuter"},
+{cat:"Sonstige",desc:"Nasser Stein, Bonbon"}]}
+};
+
+const AROMA_SEKUNDAER={title:"Sekundäre Aromen und Geschmacksnoten",subtitle:"Die Aromen und Geschmacksnoten aus der Weinbereitung nach der Gärung",items:[
+{cat:"Hefe (Hefesatz, Autolyse, Flor)",desc:"Bisquit, Gebäck, Brot, Toastbrot, Brotteig, Käse, Joghurt"},
+{cat:"Biologischer Säureabbau",desc:"Butter, Käse, Sahne"},
+{cat:"Eiche",desc:"Vanille, Gewürznelke, Kokosnuss, Zeder, Holzkohle, Rauch, Schokolade, Kaffee"}]};
+
+function getAromaDataForType(type){return{primaer:AROMA_PRIMAER_BY_TYPE[type],sekundaer:AROMA_SEKUNDAER,
+tertiaer:{title:"Tertiäre Aromen und Geschmacksnoten",subtitle:"Die Aromen und Geschmacksnoten aus der Reifung",items:WINE_TYPES[type].tertiaer}}}
+
+let allStates={rot:freshState(),weiss:freshState(),rose:freshState()},currentType='rot';
+function freshState(){return{meta:{name:"",producer:"",region:"",vintage:"",grape:"",date:""},fields:{},aromas:{},notes:""}}
+function state(){return allStates[currentType]}
+const STORAGE_PREFIX='wset_tastings_',DRAFT_PREFIX='wset_draft_';let storageAvailable=true;
+function checkStorage(){try{localStorage.setItem('__wset_test__','1');localStorage.removeItem('__wset_test__');return true}catch(e){return false}}
+function storageKey(type){return STORAGE_PREFIX+(type||currentType)}
+function getAllTastings(type){if(!storageAvailable)return[];try{return JSON.parse(localStorage.getItem(storageKey(type))||'[]')}catch(e){return[]}}
+function setAllTastings(list,type){try{localStorage.setItem(storageKey(type),JSON.stringify(list));return true}catch(e){showToast('Speichern fehlgeschlagen');return false}}
+function saveDraft(){if(storageAvailable)try{localStorage.setItem(DRAFT_PREFIX+currentType,JSON.stringify(state()))}catch(e){}}
+function loadDraft(type){try{return JSON.parse(localStorage.getItem(DRAFT_PREFIX+type)||'null')}catch(e){return null}}
+function clearDraft(type){try{localStorage.removeItem(DRAFT_PREFIX+(type||currentType))}catch(e){}}
+
+function renderStaticPills(){document.querySelectorAll('.pills[data-options]').forEach(c=>{const field=c.dataset.field,multi=c.dataset.multi==="true";
+c.innerHTML='';c.dataset.options.split('|').forEach(opt=>c.appendChild(makePill(opt,field,multi,c)))})}
+function renderFarbtonPills(){const c=document.getElementById('farbton-pills');c.innerHTML='';WINE_TYPES[currentType].farbton.forEach(o=>c.appendChild(makePill(o,'farbton',false,c)))}
+function makePill(opt,field,multi,container){const b=document.createElement('button');b.className='pill';b.textContent=opt;b.dataset.value=opt;
+b.addEventListener('click',()=>{const s=state();if(multi){let cur=s.fields[field]||[];if(!Array.isArray(cur))cur=[cur];
+if(cur.includes(opt)){cur=cur.filter(v=>v!==opt);b.classList.remove('selected')}else{cur.push(opt);b.classList.add('selected')}s.fields[field]=cur}
+else{container.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));if(s.fields[field]===opt)s.fields[field]=null;else{s.fields[field]=opt;b.classList.add('selected')}}
+saveDraft();if(field==='abgang'||field==='geschmack-intensitaet'||field.startsWith('blik-'))recomputeBlik()});return b}
+
+function renderAromaSelector(){const c=document.getElementById('aromas-container');c.innerHTML='';const data=getAromaDataForType(currentType);
+['primaer','sekundaer','tertiaer'].forEach(level=>{const g=data[level],t=document.createElement('div');t.style.cssText='background:#3a3a3a;color:#fff;padding:8px 16px;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase';t.textContent=g.title;c.appendChild(t);
+const sub=document.createElement('div');sub.style.cssText='background:#4a4a4a;color:#d0c8b8;padding:5px 16px;font-size:11px;font-style:italic';sub.textContent=g.subtitle;c.appendChild(sub);
+g.items.forEach(item=>{const row=document.createElement('div');row.className='row';row.style.alignItems='flex-start';const cat=document.createElement('div');cat.className='row-label';cat.textContent=item.cat;
+const box=document.createElement('div');box.className='pills';item.desc.split(/,\s*/).forEach(aroma=>{const b=document.createElement('button');b.className='pill';b.textContent=aroma;
+b.addEventListener('click',()=>{const s=state(),key=item.cat;if(!s.aromas[key])s.aromas[key]=[];const list=s.aromas[key];
+if(list.includes(aroma)){s.aromas[key]=list.filter(a=>a!==aroma);b.classList.remove('selected');if(!s.aromas[key].length)delete s.aromas[key]}
+else{list.push(aroma);b.classList.add('selected')}saveDraft()});box.appendChild(b)});row.append(cat,box);c.appendChild(row)})})}
+
+function renderLexikon(){const c=document.getElementById('lexikon-content');c.innerHTML='';const data=getAromaDataForType(currentType);
+const h=document.createElement('h2');h.style.cssText='font-size:20px;font-weight:600;margin:0 0 4px';h.textContent='WSET Level 2 Wein-Lexikon — '+WINE_TYPES[currentType].label;c.appendChild(h);
+const sh=document.createElement('div');sh.style.cssText='color:var(--muted);font-size:14px;font-style:italic;margin-bottom:16px';sh.textContent='Beschreibung von Aromen und Geschmacksnoten';c.appendChild(sh);
+['primaer','sekundaer','tertiaer'].forEach(level=>{const g=data[level],s=document.createElement('div');s.className='lex-section';
+s.innerHTML=`<div class="lex-section-title">${g.title}</div><div class="lex-section-sub">${g.subtitle}</div>`;
+g.items.forEach(i=>{const r=document.createElement('div');r.className='lex-row';r.innerHTML=`<div class="lex-cat">${i.cat}</div><div class="lex-desc">${i.desc}</div>`;s.appendChild(r)});c.appendChild(s)})}
+
+function syncFormFromState(){const s=state();['name','producer','region','vintage','grape','date'].forEach(k=>document.getElementById('meta-'+k).value=s.meta[k]||'');
+document.getElementById('notes').value=s.notes||'';document.querySelectorAll('.pills[data-field]').forEach(c=>{const f=c.dataset.field,m=c.dataset.multi==="true",v=s.fields[f];
+c.querySelectorAll('.pill').forEach(p=>p.classList.toggle('selected',m&&Array.isArray(v)?v.includes(p.dataset.value):p.dataset.value===v))});
+document.querySelectorAll('#aromas-container .row').forEach(r=>{const cat=r.querySelector('.row-label').textContent,sel=s.aromas[cat]||[];
+r.querySelectorAll('.pill').forEach(p=>p.classList.toggle('selected',sel.includes(p.textContent)))});recomputeBlik()}
+function readMetaIntoState(){const s=state();['name','producer','region','vintage','grape','date'].forEach(k=>s.meta[k]=document.getElementById('meta-'+k).value);s.notes=document.getElementById('notes').value}
+['meta-name','meta-producer','meta-region','meta-vintage','meta-grape','meta-date','notes'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{readMetaIntoState();saveDraft()}));
+
+function updateTypeSpecificFields(){
+  const tanninRow=document.getElementById('tannin-row');
+  if(tanninRow)tanninRow.style.display=currentType==='rot'?'':'none';
+}
+
+function switchWineType(type){readMetaIntoState();saveDraft();currentType=type;document.body.dataset.wineType=type;document.getElementById('wine-type-label').textContent=WINE_TYPES[type].label;
+document.querySelectorAll('.wine-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));const d=loadDraft(type);if(d)allStates[type]=d;
+renderFarbtonPills();renderAromaSelector();renderLexikon();updateTypeSpecificFields();syncFormFromState();if(document.getElementById('panel-saved').classList.contains('active'))renderSavedList()}
+
+function saveTasting(){readMetaIntoState();const s=state();if(!s.meta.name){showToast('Bitte einen Wein-Namen eingeben');return}const list=getAllTastings();
+list.unshift({id:'tasting_'+Date.now(),wineType:currentType,savedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(s))});
+if(setAllTastings(list)){clearDraft();allStates[currentType]=freshState();allStates[currentType].meta.date=new Date().toISOString().split('T')[0];syncFormFromState();showToast('Gespeichert: '+s.meta.name)}}
+function loadTasting(id){const e=getAllTastings().find(x=>x.id===id);if(!e)return;allStates[currentType]=e.data;saveDraft();syncFormFromState();switchTab('form');showToast('Geladen')}
+function deleteTasting(id){if(!confirm('Diese Verkostung wirklich löschen?'))return;if(setAllTastings(getAllTastings().filter(e=>e.id!==id))){renderSavedList();showToast('Gelöscht')}}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderSavedList(){const c=document.getElementById('saved-list'),list=getAllTastings();if(!list.length){c.innerHTML='<div class="empty">Noch keine gespeicherten Verkostungen.</div>';return}c.innerHTML='';
+list.forEach(e=>{const m=e.data.meta||{},d=new Date(e.savedAt),item=document.createElement('div');item.className='saved-item';item.innerHTML=`<div class="saved-info">
+<div class="saved-name">${escapeHtml(m.name||'Ohne Namen')}</div><div class="saved-meta">${escapeHtml([m.producer,m.region,m.vintage].filter(Boolean).join(' · '))}
+${e.data.fields?.qualitaet?'<br>Qualität: '+escapeHtml(e.data.fields.qualitaet):''}<br><span style="font-size:11px">${d.toLocaleString('de-CH')}</span></div></div>
+<div class="saved-actions"><button class="icon-btn" data-action="load" data-id="${e.id}">Öffnen</button><button class="icon-btn" data-action="export" data-id="${e.id}">Text</button>
+<button class="icon-btn danger" data-action="delete" data-id="${e.id}">Löschen</button></div>`;c.appendChild(item)});
+c.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const e=getAllTastings().find(x=>x.id===b.dataset.id);if(b.dataset.action==='load')loadTasting(b.dataset.id);
+if(b.dataset.action==='delete')deleteTasting(b.dataset.id);if(b.dataset.action==='export'&&e)copyToClipboard(stateToText(e.data,e.wineType))})}
+
+function stateToText(s,type){const f=s.fields||{},fmt=v=>Array.isArray(v)?(v.join(', ')||'—'):(v||'—'),lines=[];
+lines.push('WSET LEVEL 2 — SYSTEMATISCHES VERKOSTEN ('+WINE_TYPES[type||currentType].label.toUpperCase()+')','='.repeat(50),'');
+[['Wein','name'],['Produzent','producer'],['Region','region'],['Jahrgang','vintage'],['Rebsorte','grape'],['Datum','date']].forEach(([l,k])=>{if(s.meta[k])lines.push(l+': '+s.meta[k])});
+lines.push('','OPTISCHER EINDRUCK','  Klarheit: '+fmt(f.klarheit),'  Farbtiefe: '+fmt(f.farbtiefe),'  Farbton: '+fmt(f.farbton),'',
+'GERUCH','  Reintönigkeit: '+fmt(f.reintoenigkeit),'  Intensität: '+fmt(f['geruch-intensitaet']),'  Aromaausprägung: '+fmt(f.aromaauspraegung),'  Fruchtreife: '+fmt(f.fruchtreife),'',
+'GESCHMACK','  Süsse: '+fmt(f.suesse),'  Säure: '+fmt(f.saeure),(type||currentType)==='rot'?'  Tannin: '+fmt(f.tannin):null,'  Alkohol: '+fmt(f.alkohol),'  Körper: '+fmt(f.koerper),
+'  Geschmacksintensität: '+fmt(f['geschmack-intensitaet']),'  Geschmacksausprägung: '+fmt(f.geschmacksauspraegung),'  Abgang: '+fmt(f.abgang),'','GESAMTEINDRUCK');
+const vals=['blik-balance','blik-laenge','blik-intensitaet','blik-komplexitaet'].map(k=>effectiveBlik(k.replace('blik-','')));
+if(vals.some(v=>v!==null)){lines.push('  BLIK-Bewertung:','    Balance: '+(vals[0]??'—'),'    Länge: '+(vals[1]??'—'),'    Intensität: '+(vals[2]??'—'),'    Komplexität: '+(vals[3]??'—'),
+'    Summe: '+vals.reduce((a,v)=>a+(v||0),0)+' / 4')}lines.push('  Qualität: '+fmt(f.qualitaet),'');
+const al=aromasToLines(s.aromas);if(al.length){lines.push('AROMEN UND GESCHMACKSNOTEN',...al.map(x=>'  '+x),'')}if(s.notes)lines.push('NOTIZEN',s.notes);return lines.filter(v=>v!==null).join('\n')}
+function aromasToLines(a){return Object.entries(a||{}).filter(([,v])=>Array.isArray(v)&&v.length).map(([k,v])=>k+': '+v.join(', '))}
+async function copyToClipboard(text){try{await navigator.clipboard.writeText(text);showToast('In Zwischenablage kopiert')}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Kopiert')}}
+
+const BLIK_LAENGE_MAP={kurz:0,mittel:.5,lang:1},BLIK_INTENSITAET_MAP={verhalten:0,mittel:.5,'ausgeprägt':1};
+function blikSumToQuality(sum){if(sum>=4)return'hervorragend';if(sum>=3)return'sehr gut';if(sum>=2)return'gut';if(sum>=1)return'durchschnittlich';return'schwach'}
+function autoBlikValue(field){const s=state();if(field==='balance')return 1;if(field==='laenge')return s.fields.abgang?BLIK_LAENGE_MAP[s.fields.abgang]??null:null;
+if(field==='intensitaet')return s.fields['geschmack-intensitaet']?BLIK_INTENSITAET_MAP[s.fields['geschmack-intensitaet']]??null:null;if(field==='komplexitaet')return null;return null}
+function effectiveBlik(field){const v=state().fields['blik-'+field];return v!==undefined&&v!==null?parseFloat(v):autoBlikValue(field)}
+function isManualBlik(field){const v=state().fields['blik-'+field];return v!==undefined&&v!==null}
+function recomputeBlik(){const fs=['balance','laenge','intensitaet','komplexitaet'];let sum=0,count=0;fs.forEach(f=>{const v=effectiveBlik(f);if(v!==null){sum+=v;count++}});
+document.getElementById('blik-total').textContent=count?sum:'—';document.getElementById('blik-quality').textContent=count?'→ Orientierung: '+blikSumToQuality(sum):'—';
+const hint=(id,base,v)=>{document.getElementById(id).textContent=base+(v===null?' (nicht gesetzt)':' → '+v+' Pkt')};
+hint('blik-laenge-hint','automatisch aus Abgang',autoBlikValue('laenge'));hint('blik-intensitaet-hint','automatisch aus Geschmacksintensität',autoBlikValue('intensitaet'));
+document.querySelectorAll('.pills.blik-pills').forEach(c=>{const f=c.dataset.blik,manual=isManualBlik(f),auto=autoBlikValue(f),eff=effectiveBlik(f);
+c.querySelectorAll('.pill').forEach(p=>{const v=parseFloat(p.dataset.value);p.classList.remove('selected','auto-set');if(manual&&v===eff)p.classList.add('selected');else if(!manual&&auto!==null&&v===auto)p.classList.add('auto-set','selected')})})}
+
+function exportBackup(){const data={version:3,exportedAt:new Date().toISOString(),tastings:{rot:getAllTastings('rot'),weiss:getAllTastings('weiss'),rose:getAllTastings('rose')},nezHistory:getNezHistory()};
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wset-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function importBackup(file){const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);['rot','weiss','rose'].forEach(t=>{if(Array.isArray(d.tastings?.[t]))setAllTastings(d.tastings[t],t)});if(Array.isArray(d.nezHistory))setNezHistory(d.nezHistory);renderSavedList();renderNezHistory();renderNezAromaStats();showToast('Backup eingespielt')}catch(err){showToast('Fehler: '+err.message)}};r.readAsText(file)}
+
+function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
+document.querySelector('.wine-type-bar').style.display=name==='nez'?'none':'';document.getElementById('wine-type-label').style.display=name==='nez'?'none':'';
+if(name==='saved')renderSavedList();if(name==='nez'){renderNezHistory();renderNezAromaStats()}}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));document.querySelectorAll('.wine-type-btn').forEach(b=>b.onclick=()=>switchWineType(b.dataset.type));
+let toastTimer;function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600)}
+document.getElementById('btn-save').onclick=saveTasting;document.getElementById('btn-export').onclick=()=>{readMetaIntoState();copyToClipboard(stateToText(state(),currentType))};
+document.getElementById('btn-clear').onclick=()=>{if(confirm('Aktuelles Formular wirklich leeren?')){allStates[currentType]=freshState();allStates[currentType].meta.date=new Date().toISOString().slice(0,10);clearDraft();syncFormFromState()}};
+document.getElementById('btn-backup-export').onclick=exportBackup;document.getElementById('btn-backup-import').onclick=()=>document.getElementById('backup-file-input').click();
+document.getElementById('backup-file-input').onchange=e=>{if(e.target.files[0])importBackup(e.target.files[0]);e.target.value=''};
+
+const NEZ_AROMAS=[
+[1,"Zitrone","Frucht"],[2,"Grapefruit","Frucht"],[3,"Orange","Frucht"],[4,"Ananas","Frucht"],[5,"Banane","Frucht"],[6,"Litschi","Frucht"],[7,"Melone","Frucht"],[8,"Muskat (Traube)","Frucht"],[9,"Apfel","Frucht"],[10,"Birne","Frucht"],[11,"Quitte","Frucht"],[12,"Erdbeere","Frucht"],[13,"Himbeere","Frucht"],[14,"Rote Johannisbeere","Frucht"],[15,"Schwarze Johannisbeere (Cassis)","Frucht"],[16,"Heidelbeere","Frucht"],[17,"Brombeere","Frucht"],[18,"Kirsche","Frucht"],[19,"Aprikose","Frucht"],[20,"Pfirsich","Frucht"],[21,"Mandel (Kern)","Frucht"],[22,"Pflaume (Backpflaume)","Frucht"],[23,"Walnuss","Frucht"],
+[24,"Weissdorn","Blüte"],[25,"Akazie","Blüte"],[26,"Linde","Blüte"],[27,"Honig","Blüte"],[28,"Rose","Blüte"],[29,"Veilchen","Blüte"],
+[30,"Grüne Paprika","Pflanzlich / Würzig"],[31,"Champignon","Pflanzlich / Würzig"],[32,"Trüffel","Pflanzlich / Würzig"],[33,"Hefe (Weinhefe)","Pflanzlich / Würzig"],[34,"Zeder","Pflanzlich / Würzig"],[35,"Kiefer","Pflanzlich / Würzig"],[36,"Lakritze","Pflanzlich / Würzig"],[37,"Cassisknospe (Buchsbaum)","Pflanzlich / Würzig"],[38,"Heu (geschnitten)","Pflanzlich / Würzig"],[39,"Thymian","Pflanzlich / Würzig"],[40,"Vanille","Pflanzlich / Würzig"],[41,"Zimt","Pflanzlich / Würzig"],[42,"Gewürznelke","Pflanzlich / Würzig"],[43,"Pfeffer","Pflanzlich / Würzig"],[44,"Safran","Pflanzlich / Würzig"],
+[45,"Leder","Tierisch"],[46,"Moschus","Tierisch"],[47,"Butter","Tierisch"],[48,"Toastbrot","Röstaromen"],[49,"Geröstete Mandel","Röstaromen"],[50,"Geröstete Haselnuss","Röstaromen"],[51,"Karamell","Röstaromen"],[52,"Kaffee","Röstaromen"],[53,"Dunkle Schokolade","Röstaromen"],[54,"Rauch","Röstaromen"]
+].map(([num,name,group])=>({num,name,group}));
+const NEZ_SLOT_COUNT=12,NEZ_DRAFT_KEY='wset_nez_draft',NEZ_HISTORY_KEY='wset_nez_history';let nezSlots=[];
+function freshNezSlots(){return Array.from({length:NEZ_SLOT_COUNT},()=>({guess:null,correct:null}))}
+function buildAromaSelect(i,kind,val){const s=document.createElement('select');s.innerHTML='<option value="">— '+(kind==='guess'?'Vermutung wählen':'Korrektes Aroma')+' —</option>';
+const groups={};NEZ_AROMAS.forEach(a=>(groups[a.group]??=[]).push(a));Object.entries(groups).forEach(([g,arr])=>{const og=document.createElement('optgroup');og.label=g;arr.forEach(a=>{const o=document.createElement('option');o.value=a.num;o.textContent=a.num+'. '+a.name;if(val===a.num)o.selected=true;og.appendChild(o)});s.appendChild(og)});
+s.onchange=e=>{nezSlots[i][kind]=e.target.value?+e.target.value:null;saveNezDraft();renderNezSlots()};return s}
+function renderNezSlots(){const c=document.getElementById('nez-slots');c.innerHTML='';nezSlots.forEach((slot,i)=>{const d=document.createElement('div');d.className='nez-slot';let status='';
+if(slot.guess!==null&&slot.correct!==null){if(slot.guess===slot.correct){d.classList.add('correct');status='✓'}else{d.classList.add('wrong');status='✗'}}else if(slot.guess!==null){d.classList.add('pending');status='?'}
+d.innerHTML=`<div class="nez-slot-number"><span>Geruch Nr. ${i+1}</span><span>${status}</span></div><label>Meine Vermutung</label>`;d.appendChild(buildAromaSelect(i,'guess',slot.guess));
+const det=document.createElement('details');det.className='nez-resolve';if(slot.correct!==null)det.open=true;det.innerHTML='<summary>'+(slot.correct!==null?'Auflösung anpassen':'Auflösung eintragen (nach Kurs)')+'</summary><label>Korrektes Aroma</label>';
+det.appendChild(buildAromaSelect(i,'correct',slot.correct));d.appendChild(det);c.appendChild(d)});updateNezStats()}
+function updateNezStats(){let g=0,r=0,c=0;nezSlots.forEach(s=>{if(s.guess!==null)g++;if(s.guess!==null&&s.correct!==null){r++;if(s.guess===s.correct)c++}});
+document.getElementById('nez-completed').textContent=g+'/12';document.getElementById('nez-correct').textContent=r?c+'/'+r:'—';document.getElementById('nez-percent').textContent=r?Math.round(c/r*100)+'%':'—'}
+function saveNezDraft(){try{localStorage.setItem(NEZ_DRAFT_KEY,JSON.stringify(nezSlots))}catch(e){}}
+function loadNezDraft(){try{return JSON.parse(localStorage.getItem(NEZ_DRAFT_KEY)||'null')}catch(e){return null}}
+function getNezHistory(){try{return JSON.parse(localStorage.getItem(NEZ_HISTORY_KEY)||'[]')}catch(e){return[]}}
+function setNezHistory(v){try{localStorage.setItem(NEZ_HISTORY_KEY,JSON.stringify(v));return true}catch(e){return false}}
+function saveNezSession(){const guessed=nezSlots.filter(s=>s.guess!==null);if(!guessed.length){showToast('Mindestens eine Vermutung eintragen');return}const resolved=guessed.filter(s=>s.correct!==null),correct=resolved.filter(s=>s.guess===s.correct).length,h=getNezHistory();
+h.unshift({id:'nez_'+Date.now(),savedAt:new Date().toISOString(),slots:JSON.parse(JSON.stringify(nezSlots)),guessed:guessed.length,resolved:resolved.length,correct,percent:resolved.length?Math.round(correct/resolved.length*100):null});
+if(setNezHistory(h)){nezSlots=freshNezSlots();localStorage.removeItem(NEZ_DRAFT_KEY);renderNezSlots();renderNezHistory();renderNezAromaStats();showToast('Übung gespeichert')}}
+function renderNezHistory(){const c=document.getElementById('nez-history'),h=getNezHistory();if(!h.length){c.innerHTML='<div class="empty">Noch keine gespeicherten Übungen.</div>';return}c.innerHTML='';
+h.forEach(s=>{const d=document.createElement('div');d.className='nez-history-item';d.innerHTML=`<div class="nez-history-info"><div class="nez-history-date">${new Date(s.savedAt).toLocaleString('de-CH')}</div>
+<div class="nez-history-score">${s.resolved?s.correct+' / '+s.resolved+' richtig — '+s.percent+'%':s.guessed+' Vermutungen, noch nicht aufgelöst'}</div></div>
+<button class="icon-btn danger" data-del="${s.id}">Löschen</button>`;c.appendChild(d)});c.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Diese Übung löschen?')){setNezHistory(h.filter(x=>x.id!==b.dataset.del));renderNezHistory();renderNezAromaStats()}})}
+function renderNezAromaStats(){const c=document.getElementById('nez-aroma-stats'),stats={};getNezHistory().forEach(s=>s.slots.forEach(x=>{if(x.correct===null)return;stats[x.correct]??={tries:0,hits:0};stats[x.correct].tries++;if(x.guess===x.correct)stats[x.correct].hits++}));
+const nums=Object.keys(stats).map(Number);if(!nums.length){c.innerHTML='<div class="empty">Noch keine Daten.</div>';return}c.innerHTML='';nums.sort((a,b)=>stats[a].hits/stats[a].tries-stats[b].hits/stats[b].tries).forEach(n=>{const a=NEZ_AROMAS.find(x=>x.num===n),s=stats[n],pct=Math.round(s.hits/s.tries*100),r=document.createElement('div');r.className='nez-aroma-row';r.innerHTML=`<div class="nez-aroma-name">${a.num}. ${a.name}</div><div class="nez-aroma-tries">${s.hits}/${s.tries}</div><div class="nez-aroma-pct ${pct>=75?'good':pct<50?'poor':'mid'}">${pct}%</div>`;c.appendChild(r)})}
+document.getElementById('btn-nez-save').onclick=saveNezSession;document.getElementById('btn-nez-reset').onclick=()=>{if(confirm('Aktuelle Übung zurücksetzen?')){nezSlots=freshNezSlots();localStorage.removeItem(NEZ_DRAFT_KEY);renderNezSlots()}};
+
+function init(){storageAvailable=checkStorage();if(!storageAvailable)document.getElementById('storage-warning').classList.add('show');
+const today=new Date().toISOString().slice(0,10);['rot','weiss','rose'].forEach(t=>{const d=loadDraft(t);if(d)allStates[t]=d;else allStates[t].meta.date=today});
+renderStaticPills();renderFarbtonPills();renderAromaSelector();renderLexikon();updateTypeSpecificFields();syncFormFromState();nezSlots=loadNezDraft()||freshNezSlots();renderNezSlots()}
+init();
+</script>
+</body>
+</html>
